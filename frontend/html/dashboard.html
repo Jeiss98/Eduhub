@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EduHub — Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,800&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
+  <!-- Anti-FOUC: aplica tema antes del primer render -->
+  <script>!function(){var t=localStorage.getItem('eduhub-theme')||'dark';document.documentElement.setAttribute('data-theme',t)}();</script>
+  <link rel="stylesheet" href="../css/index.css" />
+  <link rel="stylesheet" href="../css/dashboard.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</head>
+
+<body>
+
+  <!-- ════ SIDEBAR ════ -->
+  <aside class="sidebar" id="sidebar">
+    <button class="theme-btn" id="theme-btn" title="Cambiar tema">
+      <span class="theme-icon">🌓</span>
+    </button>
+
+    <!-- Logo -->
+    <div class="sb-top">
+      <a href="index.html" class="eduhub-logo sb-logo-wrap">
+        <img src="../img/logo.png" alt="EduHub Logo" style="height: 28px; width: auto;">
+        <span class="eduhub-wordmark">Edu<em>Hub</em></span>
+      </a>
+      <button class="sb-close" id="sb-close-btn" aria-label="Cerrar menú">✕</button>
+    </div>
+
+    <!-- Avatar del usuario -->
+    <div class="sb-user-block">
+      <div class="sb-avatar-big" id="sb-avatar">
+        <img src="../img/user-avatar.png" alt="Usuario" id="sb-avatar-img">
+      </div>
+      <div class="sb-user-name" id="sb-uname">Cargando...</div>
+      <div class="sb-user-email" id="sb-email">--</div>
+      <div class="sb-role-pill" id="sb-role-pill">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
+          <path d="M12 14l9-5-9-5-9 5 9 5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+        </svg>
+        Cargando
+      </div>
+    </div>
+
+    <!-- Nav -->
+    <nav class="sb-nav">
+      <div class="sb-nav-group">
+        <span class="sb-label">Principal</span>
+        <button class="nav-item active" data-sec="inicio" id="nav-inicio">
+          <svg class="ni-ico" viewBox="0 0 20 20" fill="currentColor">
+            <path
+              d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
+          </svg>
+          <span>Dashboard</span>
+        </button>
+        <button class="nav-item" data-sec="proyectos" id="nav-proyectos">
+          <svg class="ni-ico" viewBox="0 0 20 20" fill="currentColor">
+            <path
+              d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z" />
+          </svg>
+          <span>Proyectos</span>
+          <span class="ni-badge" id="badge-proyectos"></span>
+        </button>
+        <button class="nav-item" data-sec="tareas" id="nav-tareas">
+          <svg class="ni-ico" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd"
+              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+              clip-rule="evenodd" />
+          </svg>
+          <span>Mis Tareas</span>
+          <span class="ni-badge" id="badge-tareas"></span>
+        </button>
+        <button class="nav-item" data-sec="notas" id="nav-notas">
+          <svg class="ni-ico" viewBox="0 0 20 20" fill="currentColor">
+            <path
+              d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+          </svg>
+          <span>Notas</span>
+        </button>
+      </div>
+
+      <div class="sb-nav-group">
+        <span class="sb-label">Contenido</span>
+        <button class="nav-item" data-sec="noticias" id="nav-noticias">
+          <svg class="ni-ico" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd"
+              d="M2 5a2 2 0 012-2h8a2 2 0 012 2v10a2 2 0 002 2H4a2 2 0 01-2-2V5zm3 1h6v4H5V6zm6 6H5v2h6v-2z"
+              clip-rule="evenodd" />
+            <path d="M15 7h1a2 2 0 012 2v5.5a1.5 1.5 0 01-3 0V7z" />
+          </svg>
+          <span>Noticias</span>
+        </button>
+        <button class="nav-item" data-sec="asistente" id="nav-asistente">
+          <svg class="ni-ico" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd"
+              d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+              stroke="currentColor" clip-rule="evenodd" />
+          </svg>
+          <span>Asistente IA</span>
+          <span class="ni-badge ni-badge-warm">Beta</span>
+        </button>
+        <button class="nav-item" data-sec="reportes" id="nav-reportes">
+          <svg class="ni-ico" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd"
+              d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm2 10a1 1 0 10-2 0v3a1 1 0 102 0v-3zm2-3a1 1 0 011 1v5a1 1 0 11-2 0v-5a1 1 0 011-1zm4-1a1 1 0 10-2 0v6a1 1 0 102 0V8z"
+              clip-rule="evenodd" />
+          </svg>
+          <span>Reportes</span>
+        </button>
+      </div>
+
+      <div class="sb-nav-group nav-admin-only hidden" id="grp-admin">
+        <span class="sb-label">Administración</span>
+        <button class="nav-item" data-sec="usuarios" id="nav-usuarios">
+          <svg class="ni-ico" viewBox="0 0 20 20" fill="currentColor">
+            <path
+              d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
+          </svg>
+          <span>Usuarios</span>
+        </button>
+      </div>
+      <div class="sb-nav-group sb-bottom-group">
+        <button class="nav-item" data-sec="perfil" id="nav-perfil">
+          <svg class="ni-ico" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+          </svg>
+          <span>Mi Perfil</span>
+        </button>
+        <button class="nav-item nav-logout" id="btn-logout">
+          <svg class="ni-ico" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd"
+              d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z"
+              clip-rule="evenodd" />
+          </svg>
+          <span>Cerrar sesión</span>
+        </button>
+      </div>
+    </nav>
+  </aside>
+
+  <!-- ════ ÁREA PRINCIPAL ════ -->
+  <div class="main-area">
+
+    <!-- Topbar -->
+    <header class="topbar">
+      <div class="tb-left">
+        <button class="sb-open-btn" id="sb-open-btn" aria-label="Abrir menú">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+          </svg>
+        </button>
+        <span class="tb-title" id="tb-title">Dashboard</span>
+      </div>
+      <div class="tb-right">
+        <div class="api-status">
+          <div class="api-led" id="api-led"></div>
+          <span class="api-txt" id="api-txt">Conectando...</span>
+        </div>
+        <button class="btn btn-ghost btn-sm sb-theme" id="theme-btn-topbar">🌙 Modo oscuro</button>
+      </div>
+    </header>
+
+    <!-- Contenido con scroll -->
+    <div class="content-scroll">
+
+      <!-- ══ INICIO ══ -->
+      <div class="sec active fade-up" id="sec-inicio">
+
+        <!-- Stats strip -->
+        <div class="stats-strip">
+          <div class="stat-tile" id="tile-proyectos" role="button" tabindex="0">
+            <div class="stat-tile-top">
+              <span class="stt-label">Proyectos activos</span>
+              <div class="stt-icon stt-icon-green">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                  <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" />
+                </svg>
+              </div>
+            </div>
+            <div class="stt-val" id="stat-proyectos">—</div>
+            <div class="stt-delta pos" id="stat-proyectos-delta">Cargando...</div>
+          </div>
+
+          <div class="stat-tile" id="tile-tareas" role="button" tabindex="0">
+            <div class="stat-tile-top">
+              <span class="stt-label">Tareas pendientes</span>
+              <div class="stt-icon stt-icon-amber">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                  <path d="M12 8v4l3 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                  <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2" />
+                </svg>
+              </div>
+            </div>
+            <div class="stt-val stt-amber" id="stat-tareas-pendientes">—</div>
+            <div class="stt-delta" id="stat-tareas-delta">Cargando...</div>
+          </div>
+
+          <div class="stat-tile" id="tile-completadas">
+            <div class="stat-tile-top">
+              <span class="stt-label">Tareas completadas</span>
+              <div class="stt-icon stt-icon-info">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                  <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" />
+                </svg>
+              </div>
+            </div>
+            <div class="stt-val stt-info" id="stat-tareas-hechas">—</div>
+            <div class="stt-delta pos" id="stat-completadas-delta">Cargando...</div>
+          </div>
+
+          <div class="stat-tile" id="tile-promedio" role="button" tabindex="0">
+            <div class="stat-tile-top">
+              <span class="stt-label">Promedio semestral</span>
+              <div class="stt-icon stt-icon-purple">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
+                    stroke="currentColor" stroke-width="2" />
+                </svg>
+              </div>
+            </div>
+            <div class="stt-val stt-purple" id="stat-promedio">—</div>
+            <div class="stt-delta pos" id="stat-promedio-delta">Cargando...</div>
+          </div>
+        </div>
+
+        <!-- Fila principal: gráfico barras + donut -->
+        <div class="main-row">
+          <div class="card main-chart-card">
+            <div class="card-head">
+              <span class="card-title">Avance de proyectos</span>
+              <div class="chart-head-right">
+                <span class="chart-legend"><span class="cl-dot cl-dot-green"></span>2025</span>
+                <span class="chart-legend"><span class="cl-dot cl-dot-amber"></span>2026</span>
+              </div>
+            </div>
+            <div class="card-body chart-body">
+              <canvas id="barChart" height="160"></canvas>
+            </div>
+          </div>
+
+          <div class="card donut-card">
+            <div class="card-head"><span class="card-title">Estado general</span></div>
+            <div class="card-body donut-body">
+              <div class="donut-wrap">
+                <canvas id="donutChart" width="140" height="140"></canvas>
+                <div class="donut-center">
+                  <div class="donut-pct">72%</div>
+                  <div class="donut-sub">Completado</div>
+                </div>
+              </div>
+              <div class="donut-legend">
+                <div class="dl-item"><span
+                    class="dl-dot dl-dot-green"></span><span>Completado</span><strong>72%</strong></div>
+                <div class="dl-item"><span class="dl-dot dl-dot-amber"></span><span>En
+                    progreso</span><strong>20%</strong></div>
+                <div class="dl-item"><span class="dl-dot dl-dot-red"></span><span>Pendiente</span><strong>8%</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Segunda fila: líneas + calendario + actividad -->
+        <div class="second-row">
+          <div class="card area-chart-card">
+            <div class="card-head">
+              <span class="card-title">Evolución de notas</span>
+              <div class="chart-head-right">
+                <span class="chart-legend"><span class="cl-dot cl-dot-purple"></span>Promedios</span>
+              </div>
+            </div>
+            <div class="card-body" style="padding-bottom:0.75rem">
+              <canvas id="lineChart" height="100"></canvas>
+            </div>
+          </div>
+
+          <div class="card cal-card">
+            <div class="card-head">
+              <span class="card-title" id="cal-mes-titulo">Mes 2026</span>
+            </div>
+            <div class="card-body">
+              <div class="cal-grid" id="cal-grid"></div>
+              <div class="cal-events-list" id="cal-events"></div>
+            </div>
+          </div>
+
+          <div class="card list-card">
+            <div class="card-head">
+              <span class="card-title">Actividad reciente</span>
+              <button class="btn btn-ghost btn-xs" id="btn-ver-tareas">Ver todo</button>
+            </div>
+            <div class="card-body">
+              <div class="activity-list" id="activity-list">
+                <div class="act-empty">Cargando...</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div><!-- /sec-inicio -->
+
+
+      <!-- ══ NOTAS ══ -->
+      <div class="sec" id="sec-notas">
+        <div class="sec-header">
+          <div>
+            <h2 class="sec-h2">Notas académicas</h2>
+            <p class="sec-p" id="notas-resumen">Cargando...</p>
+          </div>
+          <div class="sec-actions">
+            <div class="search-bar">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" />
+              </svg>
+              <input type="text" id="notas-search" placeholder="Buscar notas..." />
+            </div>
+            <select id="notas-filtro-tipo" class="filter-select">
+              <option value="all">Todos los tipos</option>
+              <option value="tarea">Tareas</option>
+              <option value="quiz">Quiz</option>
+              <option value="parcial">Parcial</option>
+              <option value="final">Final</option>
+              <option value="falla">Fallas</option>
+            </select>
+            <button class="btn btn-primary btn-sm nav-docente-admin hidden" id="btn-nueva-nota">+ Registrar
+              nota</button>
+          </div>
+        </div>
+        <div class="grades-wrap" id="grades-wrap">
+          <div class="loading-msg">Cargando notas...</div>
+        </div>
+      </div>
+
+      <!-- Modal registrar nota -->
+      <div class="modal-overlay hidden" id="modal-nota" role="dialog" aria-modal="true"
+        aria-labelledby="modal-nota-title">
+        <div class="modal-box">
+          <div class="modal-head">
+            <span class="modal-title" id="modal-nota-title">Registrar nota</span>
+            <button class="modal-close" id="close-modal-nota" aria-label="Cerrar">✕</button>
+          </div>
+          <div id="msg-modal-nota" class="form-msg" role="alert"></div>
+          <div class="frow">
+            <div class="fld">
+              <label for="mn2-proyecto">Proyecto</label>
+              <select id="mn2-proyecto">
+                <option value="">Selecciona proyecto...</option>
+              </select>
+            </div>
+            <div class="fld">
+              <label for="mn2-estudiante">Estudiante</label>
+              <select id="mn2-estudiante">
+                <option value="">Selecciona estudiante...</option>
+              </select>
+            </div>
+          </div>
+          <div class="frow">
+            <div class="fld">
+              <label for="mn2-tipo">Tipo</label>
+              <select id="mn2-tipo">
+                <option value="tarea">Tarea</option>
+                <option value="quiz">Quiz</option>
+                <option value="parcial">Parcial</option>
+                <option value="final">Final</option>
+                <option value="falla">Falla (ausencia)</option>
+              </select>
+            </div>
+            <div class="fld" id="cal-wrap">
+              <label for="mn2-cal">Calificación (0–10)</label>
+              <input type="number" id="mn2-cal" min="0" max="10" step="0.1" placeholder="0.0 – 10.0" />
+            </div>
+          </div>
+          <div class="fld">
+            <label for="mn2-titulo">Descripción</label>
+            <input type="text" id="mn2-titulo" placeholder="Ej: Tarea 1 – Algoritmos de ordenamiento" />
+          </div>
+          <div class="fld">
+            <label for="mn2-comentarios">Comentarios (opcional)</label>
+            <textarea id="mn2-comentarios" rows="2" placeholder="Observaciones..." style="resize:vertical"></textarea>
+          </div>
+          <div class="modal-actions">
+            <button class="btn btn-ghost btn-sm" id="cancel-modal-nota">Cancelar</button>
+            <button class="btn btn-primary btn-sm" id="guardar-nota-btn">Registrar</button>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- ══ PROYECTOS ══ -->
+      <div class="sec" id="sec-proyectos">
+        <div class="sec-header">
+          <div>
+            <h2 class="sec-h2">Proyectos académicos</h2>
+            <p class="sec-p" id="proj-count">Cargando...</p>
+          </div>
+          <div class="sec-actions">
+            <div class="search-bar">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" />
+              </svg>
+              <input type="text" id="proj-search" placeholder="Buscar proyectos..." />
+            </div>
+            <select id="proj-filtro-estado" class="filter-select">
+              <option value="all">Todos los estados</option>
+              <option value="activo">Activo</option>
+              <option value="completado">Completado</option>
+              <option value="pausado">Pausado</option>
+              <option value="cancelado">Cancelado</option>
+            </select>
+            <button class="btn btn-primary btn-sm nav-docente-admin hidden" id="btn-nuevo-proyecto">+ Nuevo
+              proyecto</button>
+          </div>
+        </div>
+        <div class="projects-grid" id="projects-grid">
+          <div class="loading-msg">Cargando proyectos...</div>
+        </div>
+      </div>
+
+      <!-- Modal proyecto -->
+      <div class="modal-overlay hidden" id="modal-proyecto" role="dialog" aria-modal="true"
+        aria-labelledby="modal-proj-title">
+        <div class="modal-box">
+          <div class="modal-head">
+            <span class="modal-title" id="modal-proj-title">Nuevo proyecto</span>
+            <button class="modal-close" id="close-modal-proyecto" aria-label="Cerrar">✕</button>
+          </div>
+          <div id="msg-modal-proj" class="form-msg" role="alert"></div>
+          <div class="fld">
+            <label for="mp-titulo">Título del proyecto</label>
+            <input type="text" id="mp-titulo" placeholder="Nombre del proyecto" />
+          </div>
+          <div class="fld">
+            <label for="mp-desc">Descripción</label>
+            <textarea id="mp-desc" rows="3" placeholder="Describe el proyecto..." style="resize:vertical"></textarea>
+          </div>
+          <div class="frow">
+            <div class="fld">
+              <label for="mp-inicio">Fecha inicio</label>
+              <input type="date" id="mp-inicio" />
+            </div>
+            <div class="fld">
+              <label for="mp-limite">Fecha límite</label>
+              <input type="date" id="mp-limite" />
+            </div>
+          </div>
+          <div class="modal-actions">
+            <button class="btn btn-ghost btn-sm" id="cancel-modal-proyecto">Cancelar</button>
+            <button class="btn btn-primary btn-sm" id="guardar-proyecto-btn">Crear proyecto</button>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- ══ TAREAS ══ -->
+      <div class="sec" id="sec-tareas">
+        <div class="sec-header">
+          <div>
+            <h2 class="sec-h2">Mis tareas</h2>
+            <p class="sec-p" id="tar-count">Cargando...</p>
+          </div>
+          <div class="sec-actions">
+            <div class="search-bar">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" />
+              </svg>
+              <input type="text" id="tar-search" placeholder="Buscar tareas..." />
+            </div>
+            <select id="tar-filtro-prio" class="filter-select">
+              <option value="all">Todas las prioridades</option>
+              <option value="alta">Alta</option>
+              <option value="media">Media</option>
+              <option value="baja">Baja</option>
+            </select>
+            <select id="tar-filtro-estado" class="filter-select">
+              <option value="all">Todos los estados</option>
+              <option value="pendiente">Pendientes</option>
+              <option value="completada">Completadas</option>
+            </select>
+            <button class="btn btn-primary btn-sm nav-docente-admin hidden" id="btn-nueva-tarea">+ Nueva tarea</button>
+          </div>
+        </div>
+        <div class="tasks-full" id="tasks-list">
+          <div class="loading-msg">Cargando tareas...</div>
+        </div>
+      </div>
+
+      <!-- Modal tarea -->
+      <div class="modal-overlay hidden" id="modal-tarea" role="dialog" aria-modal="true"
+        aria-labelledby="modal-tarea-title">
+        <div class="modal-box">
+          <div class="modal-head">
+            <span class="modal-title" id="modal-tarea-title">Nueva tarea</span>
+            <button class="modal-close" id="close-modal-tarea" aria-label="Cerrar">✕</button>
+          </div>
+          <div id="msg-modal-tar" class="form-msg" role="alert"></div>
+          <div class="fld">
+            <label for="mt-titulo">Título de la tarea</label>
+            <input type="text" id="mt-titulo" placeholder="Nombre de la tarea" />
+          </div>
+          <div class="fld">
+            <label for="mt-desc">Descripción</label>
+            <textarea id="mt-desc" rows="2" placeholder="Descripción opcional..." style="resize:vertical"></textarea>
+          </div>
+          <div class="frow">
+            <div class="fld">
+              <label for="mt-proyecto">Proyecto</label>
+              <select id="mt-proyecto">
+                <option value="">Selecciona proyecto...</option>
+              </select>
+            </div>
+            <div class="fld">
+              <label for="mt-estudiante">Asignar a</label>
+              <select id="mt-estudiante">
+                <option value="">Selecciona estudiante...</option>
+              </select>
+            </div>
+          </div>
+          <div class="frow">
+            <div class="fld">
+              <label for="mt-prioridad">Prioridad</label>
+              <select id="mt-prioridad">
+                <option value="alta">Alta</option>
+                <option value="media" selected>Media</option>
+                <option value="baja">Baja</option>
+              </select>
+            </div>
+            <div class="fld">
+              <label for="mt-limite">Fecha límite</label>
+              <input type="date" id="mt-limite" />
+            </div>
+          </div>
+          <div class="modal-actions">
+            <button class="btn btn-ghost btn-sm" id="cancel-modal-tarea">Cancelar</button>
+            <button class="btn btn-primary btn-sm" id="guardar-tarea-btn">Crear tarea</button>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- ══ NOTICIAS ══ -->
+      <div class="sec" id="sec-noticias">
+        <div class="sec-header">
+          <div>
+            <h2 class="sec-h2">Noticias institucionales</h2>
+            <p class="sec-p" id="news-count">Cargando...</p>
+          </div>
+          <div class="sec-actions">
+            <div class="search-bar">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" />
+              </svg>
+              <input type="text" id="news-search" placeholder="Buscar noticias..." />
+            </div>
+            <select id="news-filtro" class="filter-select">
+              <option value="all">Todas las categorías</option>
+              <option value="academico">Académico</option>
+              <option value="taller">Talleres</option>
+              <option value="infra">Infraestructura</option>
+              <option value="logro">Logros</option>
+            </select>
+            <button class="btn btn-primary btn-sm nav-docente-admin hidden" id="btn-nueva-noticia">+ Nueva
+              noticia</button>
+          </div>
+        </div>
+        <div class="news-grid" id="news-grid">
+          <div class="loading-msg">Cargando noticias...</div>
+        </div>
+      </div>
+
+      <!-- Modal noticia -->
+      <div class="modal-overlay hidden" id="modal-noticia" role="dialog" aria-modal="true"
+        aria-labelledby="modal-noticia-title">
+        <div class="modal-box" style="max-width:580px">
+          <div class="modal-head">
+            <span class="modal-title" id="modal-noticia-title">Nueva noticia</span>
+            <button class="modal-close" id="close-modal-noticia" aria-label="Cerrar">✕</button>
+          </div>
+          <div id="msg-modal-noticia" class="form-msg" role="alert"></div>
+          <div class="fld">
+            <label for="mn-titulo">Título</label>
+            <input type="text" id="mn-titulo" placeholder="Título de la noticia" />
+          </div>
+          <div class="fld">
+            <label for="mn-contenido">Contenido</label>
+            <textarea id="mn-contenido" rows="4" placeholder="Escribe el contenido de la noticia..."
+              style="resize:vertical"></textarea>
+          </div>
+          <div class="frow">
+            <div class="fld">
+              <label for="mn-categoria">Categoría</label>
+              <select id="mn-categoria">
+                <option value="academico">📅 Académico</option>
+                <option value="taller">🛠 Taller</option>
+                <option value="infra">🏗 Infraestructura</option>
+                <option value="logro">🏆 Logro</option>
+              </select>
+            </div>
+            <div class="fld">
+              <label for="mn-emoji">Emoji</label>
+              <input type="text" id="mn-emoji" placeholder="📌" maxlength="4" style="font-size:1.4rem" />
+            </div>
+          </div>
+          <div class="fld">
+            <label>Imagen de portada (opcional · máx. 5MB)</label>
+            <div class="img-upload-area" id="img-upload-area">
+              <div class="img-upload-placeholder" id="img-placeholder">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                    stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+                </svg>
+                <span>Clic para seleccionar imagen</span>
+                <small>JPG, PNG, WEBP o GIF</small>
+              </div>
+              <img id="img-preview" class="img-preview hidden" alt="Preview" />
+            </div>
+            <input type="file" id="mn-imagen" accept="image/*" style="display:none" />
+            <button class="btn btn-ghost btn-xs" id="btn-quitar-img" style="margin-top:4px;display:none">✕ Quitar
+              imagen</button>
+          </div>
+          <div class="fld">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+              <input type="checkbox" id="mn-destacada" />
+              Marcar como destacada (aparece primero)
+            </label>
+          </div>
+          <div class="modal-actions">
+            <button class="btn btn-ghost btn-sm" id="cancel-modal-noticia">Cancelar</button>
+            <button class="btn btn-primary btn-sm" id="btn-publicar">Publicar noticia</button>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- ══ ASISTENTE IA ══ -->
+      <div class="sec" id="sec-asistente">
+        <div class="sec-header">
+          <div>
+            <h2 class="sec-h2">Asistente IA</h2>
+            <p class="sec-p">Tu ayudante académico · Powered by Claude</p>
+          </div>
+          <span class="badge badge-warm">Beta</span>
+        </div>
+        <div class="ai-box">
+          <div class="ai-msgs" id="ai-msgs">
+            <div class="ai-msg bot">
+              <div class="ai-av">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                </svg>
+              </div>
+              <div class="ai-bub" id="ai-welcome-msg">¡Hola! Soy tu asistente académico EduHub. Puedo ayudarte con tus
+                materias, explicar conceptos, revisar código o darte recomendaciones. ¿En qué te puedo ayudar?</div>
+            </div>
+          </div>
+          <div class="ai-chips">
+            <button class="ai-chip" data-msg="Explícame la diferencia entre O(n) y O(n log n)">¿Qué es O(n log
+              n)?</button>
+            <button class="ai-chip" data-msg="¿Cómo mejorar mi promedio semestral?">Cómo mejorar mi promedio</button>
+            <button class="ai-chip" data-msg="Dame consejos para diseñar una base de datos relacional">Tips base de
+              datos</button>
+            <button class="ai-chip" data-msg="¿Qué técnicas de estudio son más efectivas?">Técnicas de estudio</button>
+          </div>
+          <div class="ai-input-row">
+            <input type="text" id="ai-inp" class="ai-inp" placeholder="Escribe tu pregunta…"
+              aria-label="Mensaje al asistente" />
+            <button class="ai-send" id="ai-send-btn" aria-label="Enviar">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                <path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" stroke="currentColor" stroke-width="2.2"
+                  stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- ══ REPORTES ══ -->
+      <div class="sec" id="sec-reportes">
+        <div class="sec-header">
+          <div>
+            <h2 class="sec-h2">Reportes y exportaciones</h2>
+            <p class="sec-p">Descarga reportes en PDF directamente desde la plataforma</p>
+          </div>
+        </div>
+        <div class="reportes-grid">
+          <div class="reporte-card">
+            <div class="rc-icon rc-icon-green">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+              </svg>
+            </div>
+            <div class="rc-info">
+              <div class="rc-title">Reporte de Proyectos</div>
+              <div class="rc-desc">Lista completa de proyectos con avance, fechas y equipo.</div>
+            </div>
+            <button class="btn btn-primary btn-sm" data-pdf-url="http://localhost:3000/api/reportes/proyectos.pdf"
+              id="btn-pdf-proyectos">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+              </svg>
+              Descargar PDF
+            </button>
+          </div>
+          <div class="reporte-card">
+            <div class="rc-icon rc-icon-amber">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" />
+              </svg>
+            </div>
+            <div class="rc-info">
+              <div class="rc-title">Reporte de Tareas</div>
+              <div class="rc-desc">Estado de todas las tareas asignadas con prioridades y fechas.</div>
+            </div>
+            <button class="btn btn-primary btn-sm" data-pdf-url="http://localhost:3000/api/reportes/tareas.pdf"
+              id="btn-pdf-tareas">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+              </svg>
+              Descargar PDF
+            </button>
+          </div>
+          <div class="reporte-card">
+            <div class="rc-icon rc-icon-purple">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
+                  stroke="currentColor" stroke-width="2" />
+              </svg>
+            </div>
+            <div class="rc-info">
+              <div class="rc-title">Reporte de Notas</div>
+              <div class="rc-desc">Evaluaciones, calificaciones y promedios por estudiante.</div>
+            </div>
+            <button class="btn btn-primary btn-sm" data-pdf-url="http://localhost:3000/api/reportes/notas.pdf"
+              id="btn-pdf-notas">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+              </svg>
+              Descargar PDF
+            </button>
+          </div>
+          <div class="reporte-card nav-admin-only hidden">
+            <div class="rc-icon rc-icon-info">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+              </svg>
+            </div>
+            <div class="rc-info">
+              <div class="rc-title">Reporte de Usuarios</div>
+              <div class="rc-desc">Lista completa de usuarios registrados con roles y estado.</div>
+            </div>
+            <button class="btn btn-primary btn-sm" data-pdf-url="http://localhost:3000/api/reportes/usuarios.pdf"
+              id="btn-pdf-usuarios">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+              </svg>
+              Descargar PDF
+            </button>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- ══ USUARIOS (solo admin) ══ -->
+      <div class="sec" id="sec-usuarios">
+        <div class="sec-header">
+          <div>
+            <h2 class="sec-h2">Gestión de usuarios</h2>
+            <p class="sec-p">Solo el administrador puede crear y gestionar cuentas.</p>
+          </div>
+          <div class="sec-actions">
+            <div class="search-bar">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" />
+              </svg>
+              <input type="text" id="users-search" placeholder="Buscar usuario..." />
+            </div>
+            <select id="users-filtro-rol" class="filter-select">
+              <option value="all">Todos los roles</option>
+              <option value="estudiante">Estudiantes</option>
+              <option value="docente">Docentes</option>
+              <option value="admin">Admins</option>
+            </select>
+            <button class="btn btn-primary btn-sm" id="btn-crear-usuario">+ Crear usuario</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head"><span class="card-title" id="users-count-label">Usuarios registrados</span></div>
+          <div class="card-body" style="padding:0">
+            <table class="users-table">
+              <thead>
+                <tr>
+                  <th>Nombre</th>
+                  <th>Email</th>
+                  <th>Rol</th>
+                  <th>Estado</th>
+                  <th>Acción</th>
+                </tr>
+              </thead>
+              <tbody id="users-tbody">
+                <tr>
+                  <td colspan="5" class="loading-cell">Cargando usuarios…</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal crear usuario -->
+      <div class="modal-overlay hidden" id="modal-usuario" role="dialog" aria-modal="true"
+        aria-labelledby="modal-usuario-title">
+        <div class="modal-box">
+          <div class="modal-head">
+            <span class="modal-title" id="modal-usuario-title">Crear nuevo usuario</span>
+            <button class="modal-close" id="close-modal-usuario" aria-label="Cerrar">✕</button>
+          </div>
+          <div id="msg-modal" class="form-msg" role="alert"></div>
+          <div class="frow">
+            <div class="fld"><label for="mu-nombre">Nombre</label><input type="text" id="mu-nombre"
+                placeholder="Nombre(s)" /></div>
+            <div class="fld"><label for="mu-apellido">Apellido</label><input type="text" id="mu-apellido"
+                placeholder="Apellido(s)" /></div>
+          </div>
+          <div class="frow">
+            <div class="fld">
+              <label for="mu-email">Correo electrónico</label>
+              <input type="email" id="mu-email" placeholder="correo@konradlorenz.edu.co" />
+            </div>
+            <div class="fld">
+              <label for="mu-documento">Documento</label>
+              <input type="text" id="mu-documento" placeholder="Número de documento" autocomplete="off" />
+            </div>
+          </div>
+          <div class="fld">
+            <label for="mu-rol">Rol</label>
+            <select id="mu-rol">
+              <option value="estudiante">Estudiante</option>
+              <option value="docente">Docente</option>
+              <option value="admin">Administrador</option>
+            </select>
+          </div>
+          <div class="modal-actions" id="modal-usuario-actions">
+            <button class="btn btn-ghost btn-sm" id="cancel-modal-usuario">Cancelar</button>
+            <button class="btn btn-primary btn-sm" id="crear-usuario-btn">Crear cuenta</button>
+          </div>
+          <div class="temp-pass-box hidden" id="temp-pass-box">
+            <div class="tpb-label">✅ Usuario creado. Contraseña temporal:</div>
+            <div class="tpb-pass" id="temp-pass-val"></div>
+            <div class="tpb-note">Comparte esta contraseña con el usuario. Deberá cambiarla en su primer acceso.</div>
+            <button class="btn btn-primary btn-sm w-full" id="close-temp-pass-btn">Aceptar y cerrar</button>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- ══ PERFIL ══ -->
+      <div class="sec" id="sec-perfil">
+        <div class="profile-page">
+          <div class="prof-hero">
+            <div class="prof-cover"></div>
+            <div class="prof-info-row">
+              <div class="prof-av-wrap" id="btn-editar-perfil" style="cursor: pointer; position: relative;" title="Editar perfil" onmouseover="this.querySelector('.prof-av-overlay').style.opacity='1'" onmouseout="this.querySelector('.prof-av-overlay').style.opacity='0'">
+                <div class="prof-av" id="prof-av">
+                  <img src="../img/user-avatar.png" alt="Perfil" id="prof-av-img">
+                  <div class="prof-av-overlay" style="position: absolute; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: #fff; border-radius: 50%; opacity: 0; transition: opacity 0.2s;">
+                    📷
+                  </div>
+                </div>
+                <div class="prof-online"></div>
+              </div>
+              <div>
+                <h2 class="prof-name" id="prof-name">Cargando...</h2>
+                <div class="prof-sub" id="prof-sub">—</div>
+              </div>
+
+            </div>
+          </div>
+          <div class="prof-metrics">
+            <div class="pm">
+              <div class="pm-val" id="pm-promedio">—</div>
+              <div class="pm-lbl">Promedio</div>
+            </div>
+            <div class="pm">
+              <div class="pm-val" id="pm-proyectos">—</div>
+              <div class="pm-lbl">Proyectos</div>
+            </div>
+            <div class="pm">
+              <div class="pm-val" id="pm-tareas">—</div>
+              <div class="pm-lbl">Completadas</div>
+            </div>
+            <div class="pm">
+              <div class="pm-val" id="pm-rol">—</div>
+              <div class="pm-lbl">Rol</div>
+            </div>
+          </div>
+
+          <!-- Vista datos -->
+          <div id="perfil-view">
+            <div class="prof-sections">
+              <div class="card">
+                <div class="card-head"><span class="card-title">Información personal</span></div>
+                <div class="card-body prof-data" id="perfil-datos"></div>
+              </div>
+              <div class="card">
+                <div class="card-head">
+                  <span class="card-title">Contacto de emergencia</span>
+                  <span class="badge" id="perfil-edad-badge">—</span>
+                </div>
+                <div class="card-body prof-data" id="perfil-contacto"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Formulario edición -->
+          <div id="perfil-edit" class="hidden">
+            <div class="prof-sections">
+              <div class="card">
+                <div class="card-head"><span class="card-title">Editar información personal</span></div>
+                <div class="card-body">
+                  <div id="msg-perfil" class="form-msg" role="alert"></div>
+                  <div class="frow">
+                    <div class="fld">
+                      <label>Foto de perfil</label>
+                      <input type="file" id="ep-avatar" accept="image/*" style="padding: 6px; font-size: 0.85rem;" />
+                    </div>
+                  </div>
+                  <div class="frow">
+                    <div class="fld"><label for="ep-nacimiento">Fecha de nacimiento</label><input type="date"
+                        id="ep-nacimiento" /></div>
+                    <div class="fld"><label for="ep-ciudad">Ciudad</label><input type="text" id="ep-ciudad"
+                        placeholder="Bogotá, Colombia" /></div>
+                  </div>
+                  <div class="frow">
+                    <div class="fld"><label for="ep-telefono">Teléfono</label><input type="text" id="ep-telefono"
+                        placeholder="+57 300 000 0000" /></div>
+                    <div class="fld"><label for="ep-semestre">Semestre</label><input type="text" id="ep-semestre"
+                        placeholder="6° Semestre" /></div>
+                  </div>
+                  <div class="fld"><label for="ep-programa">Programa académico</label><input type="text"
+                      id="ep-programa" placeholder="Ingeniería de Sistemas" /></div>
+                  <div class="fld">
+                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+                      <input type="checkbox" id="ep-menor" />
+                      Soy menor de edad (mostrar datos de acudiente)
+                    </label>
+                  </div>
+                </div>
+              </div>
+              <div class="card">
+                <div class="card-head"><span class="card-title" id="ep-contacto-title">Contacto de emergencia</span>
+                </div>
+                <div class="card-body">
+                  <div class="frow">
+                    <div class="fld"><label for="ep-c-nombre">Nombre completo</label><input type="text" id="ep-c-nombre"
+                        placeholder="Nombre del contacto" /></div>
+                    <div class="fld"><label for="ep-c-telefono">Teléfono</label><input type="text" id="ep-c-telefono"
+                        placeholder="+57 300 000 0000" /></div>
+                  </div>
+                  <div class="frow">
+                    <div class="fld"><label for="ep-c-relacion">Relación</label><input type="text" id="ep-c-relacion"
+                        placeholder="Padre, Madre, Tutor..." /></div>
+                    <div class="fld"><label for="ep-c-email">Correo</label><input type="email" id="ep-c-email"
+                        placeholder="correo@ejemplo.com" /></div>
+                  </div>
+                  <div class="modal-actions" style="margin-top:1rem">
+                    <button class="btn btn-ghost btn-sm" id="cancel-edit-perfil">Cancelar</button>
+                    <button class="btn btn-primary btn-sm" id="guardar-perfil-btn">Guardar cambios</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content-scroll -->
+  </div><!-- /main-area -->
+
+  <!-- Overlay móvil -->
+  <div class="sb-overlay" id="sb-overlay"></div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast" role="status" aria-live="polite">
+    <span class="toast-dot" id="td"></span>
+    <span id="tm"></span>
+  </div>
+
+  <!-- Acciones flotantes -->
+  <div class="floating-actions">
+    <!-- Microsoft Teams -->
+    <a class="float-btn teams-btn" href="https://teams.microsoft.com/" target="_blank" rel="noopener noreferrer"
+      title="Soporte Microsoft Teams">
+      <svg viewBox="0 0 24 24">
+        <path
+          d="M12.012 11.233c.961 0 1.745-.769 1.745-1.716 0-.948-.784-1.716-1.745-1.716-.96 0-1.744.768-1.744 1.716 0 .947.784 1.716 1.744 1.716zm2.348 2.502h-4.696c-1.354 0-2.454 1.085-2.454 2.417v.512h9.605v-.512c0-1.332-1.1-2.417-2.455-2.417zM22.062 10.43c.72 0 1.309-.576 1.309-1.287 0-.711-.588-1.288-1.31-1.288s-1.308.577-1.308 1.288c0 .711.587 1.287 1.308 1.287zm1.722 1.815h-3.444c-.958 0-1.737.768-1.737 1.716v.385h6.918v-.385c0-.948-.779-1.716-1.737-1.716zM4.053 10.43c.721 0 1.309-.576 1.309-1.287 0-.711-.588-1.288-1.31-1.288s-1.308.577-1.308 1.288c0 .711.587 1.287 1.308 1.287zm1.722 1.815H2.33c-.958 0-1.737.768-1.737 1.716v.385H7.51v-.385c0-.948-.78-1.716-1.737-1.716z" />
+      </svg>
+    </a>
+    <!-- WhatsApp -->
+    <a class="float-btn wa-btn" href="https://wa.me/573000000000" target="_blank" rel="noopener noreferrer"
+      title="Soporte WhatsApp EduHub">
+      <svg viewBox="0 0 24 24">
+        <path
+          d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+      </svg>
+    </a>
+  </div>
+  <script src="../js/config.js"></script>
+  <script src="../js/theme.js"></script>
+  <script src="../js/dashboard.js"></script>
+</body>
+
+</html>

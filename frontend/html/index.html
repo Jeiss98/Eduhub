@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduHub — Futuro Académico</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <!-- Anti-FOUC: aplica tema antes del primer render -->
+    <script>!function(){var t=localStorage.getItem('eduhub-theme')||'dark';document.documentElement.setAttribute('data-theme',t)}();</script>
+    <link rel="stylesheet" href="../css/index.css">
+</head>
+
+<body>
+
+    <!-- NAV -->
+    <nav class="nav" id="main-nav">
+        <a href="index.html" class="nav-logo">
+            <img src="../img/logo.png" alt="EduHub Logo" style="height: 40px; width: auto;">
+            <span class="logo-text">Edu<em>Hub</em></span>
+        </a>
+        <div class="nav-links">
+            <a href="#noticias" class="nav-link">Noticias</a>
+            <a href="#funcionalidades" class="nav-link">Módulos</a>
+            <a href="#como-funciona" class="nav-link">Flujo</a>
+            <a href="#tecnologia" class="nav-link">Stack</a>
+        </div>
+        <div class="nav-right">
+            <button class="theme-btn" id="theme-btn" title="Cambiar tema">
+                <span class="theme-icon">🌓</span>
+            </button>
+            <a href="login.html" class="btn btn-ghost">Acceso</a>
+            <a href="login.html" class="btn btn-primary">
+                <span>Comenzar</span>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+            </a>
+        </div>
+    </nav>
+
+
+    <!-- HERO -->
+    <header class="hero-wrap">
+        <div class="hero-noise"></div>
+        <div class="hero-grid-lines"></div>
+        <div class="hero-glow hero-glow-1"></div>
+        <div class="hero-glow hero-glow-2"></div>
+
+        <div class="hero-inner">
+            <div class="hero-content">
+                <div class="hero-tag">
+                    <span class="hero-tag-dot"></span>
+                    Konrad Lorenz · Semestre 2026-1
+                </div>
+                <h1 class="hero-title">
+                    <span class="hero-title-line">Gestión</span>
+                    <span class="hero-title-line hero-title-italic">Académica</span>
+                    <span class="hero-title-line">Evolucionada.</span>
+                </h1>
+                <p class="hero-desc">
+                    La plataforma inteligente que centraliza el éxito institucional con una experiencia moderna, rápida y conectada.
+                </p>
+                <div class="hero-actions">
+                    <a href="login.html" class="btn-hero-primary">Entrar ahora</a>
+                    <a href="#noticias" class="btn-hero-ghost">Explorar</a>
+                </div>
+            </div>
+
+            <div class="hero-stats-panel">
+                <div class="stats-panel-inner">
+                    <div class="stat-row">
+                        <div class="stat-item">
+                            <span class="stat-val" id="stat-usuarios">2.4k</span>
+                            <span class="stat-lbl">Usuarios</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-val" id="stat-proyectos">850</span>
+                            <span class="stat-lbl">Proyectos</span>
+                        </div>
+                    </div>
+                    <div class="tech-mini-stack">
+                        <span class="tech-mini">Arquitectura conectada</span>
+                        <span class="tech-mini">Datos en tiempo real</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="hero-scroll-hint">
+            <div class="scroll-line"></div>
+        </div>
+    </header>
+
+    <!-- PROGRAMS -->
+    <section class="section programs-section" id="programas">
+        <div class="eyebrow">00 — Academia</div>
+        <h2 class="section-title">Programas <em>Destacados</em></h2>
+        <div class="features-grid">
+            <div class="feat-card">
+                <div class="feat-ico">🎓</div>
+                <h3>Pregrado</h3>
+                <p>Descubre tu vocación con programas diseñados para los retos del futuro.</p>
+                <a href="#" class="nav-link" style="margin-top: 16px; display: inline-block; color: var(--primary);">Ver oferta →</a>
+            </div>
+            <div class="feat-card">
+                <div class="feat-ico">🧬</div>
+                <h3>Posgrado</h3>
+                <p>Especialízate y lidera en tu campo profesional con educación de alto nivel.</p>
+                <a href="#" class="nav-link" style="margin-top: 16px; display: inline-block; color: var(--primary);">Ver oferta →</a>
+            </div>
+            <div class="feat-card">
+                <div class="feat-ico">🌍</div>
+                <h3>Internacional</h3>
+                <p>Conecta con el mundo a través de nuestros convenios y doble titulación.</p>
+                <a href="#" class="nav-link" style="margin-top: 16px; display: inline-block; color: var(--primary);">Más info →</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- NEWS -->
+    <section class="section news-section" id="noticias">
+        <div class="eyebrow">01 — Comunicaciones</div>
+        <h2 class="section-title">Noticias <em>Institucionales</em></h2>
+        <div class="news-cascade-container" id="news-cascade">
+            <!-- Dynamic Content -->
+        </div>
+    </section>
+
+    <!-- FEATURES -->
+    <section class="section features-section" id="funcionalidades">
+        <div class="eyebrow">02 — Módulos</div>
+        <h2 class="section-title">Todo en un <em>Lugar</em></h2>
+        <div class="features-grid">
+            <div class="feat-card">
+                <div class="feat-ico">📁</div>
+                <h3>Proyectos</h3>
+                <p>Control total de ciclos de vida y estados en tiempo real.</p>
+            </div>
+            <div class="feat-card">
+                <div class="feat-ico">✅</div>
+                <h3>Tareas</h3>
+                <p>Asignación inteligente y alertas automáticas.</p>
+            </div>
+            <div class="feat-card">
+                <div class="feat-ico">📊</div>
+                <h3>Evaluaciones</h3>
+                <p>Registro histórico y retroalimentación directa.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- TECH -->
+    <section class="section tech-section" id="tecnologia">
+        <div class="eyebrow">03 — Tech Stack</div>
+        <h2 class="section-title">Arquitectura <em>híbrida</em></h2>
+        <div class="tech-grid">
+            <div class="tech-card">Node.js</div>
+            <div class="tech-card">Express</div>
+            <div class="tech-card">MySQL</div>
+            <div class="tech-card">MongoDB</div>
+        </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="cta-section">
+        <div class="cta-inner">
+            <h2>¿Listo para el <em>Cambio?</em></h2>
+            <p>Únete a la plataforma que está transformando la gestión académica.</p>
+            <a href="login.html" class="btn-cta-main">Empezar ahora</a>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <div class="footer-inner">
+            <div class="footer-brand">
+                <span class="logo-text">Edu<em>Hub</em></span>
+            </div>
+            <div class="footer-info">
+                <p>Konrad Lorenz · 2026</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../js/config.js"></script>
+  <script src="../js/theme.js"></script>
+    <script src="../js/index.js"></script>
+
+</body>
+</html>
