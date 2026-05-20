@@ -1,87 +1,61 @@
-// repositories/usuarioRepository.js
-const { pool } = require('../config/mysql');
+// repositories/usuarioRepository.js — Mongoose (MongoDB)
+const { Usuario } = require('../models/mongo/usuario.model');
 
 class UsuarioRepository {
   async findByEmail(email) {
-    const [rows] = await pool.query(
-      `SELECT id_usuario AS id, nombre, apellido, email, documento, password, rol, activo, created_at 
-       FROM usuarios WHERE email = ?`,
-      [email.trim().toLowerCase()]
-    );
-    return rows[0] || null;
+    return await Usuario.findOne({ email: email.trim().toLowerCase() }).lean();
   }
 
   async findById(id) {
-    const [rows] = await pool.query(
-      `SELECT id_usuario AS id, nombre, apellido, email, documento, password, rol, activo, created_at 
-       FROM usuarios WHERE id_usuario = ?`,
-      [id]
-    );
-    return rows[0] || null;
+    return await Usuario.findById(id).lean();
   }
 
   async findPublicById(id) {
-    const [rows] = await pool.query(
-      `SELECT id_usuario AS id, nombre, apellido, email, documento, rol, activo, created_at 
-       FROM usuarios WHERE id_usuario = ?`,
-      [id]
-    );
-    return rows[0] || null;
+    return await Usuario.findById(id)
+      .select('-password')
+      .lean();
   }
+
   async create(userData) {
     const { nombre, apellido, email, documento, passwordHash, rol } = userData;
-    const [result] = await pool.query(
-      'INSERT INTO usuarios (nombre, apellido, email, documento, password, rol) VALUES (?, ?, ?, ?, ?, ?)',
-      [nombre.trim(), apellido.trim(), email.trim().toLowerCase(), documento.trim(), passwordHash, rol]
-    );
-    return result.insertId;
+    const usuario = new Usuario({
+      nombre: nombre.trim(),
+      apellido: apellido ? apellido.trim() : null,
+      email: email.trim().toLowerCase(),
+      documento: documento.trim(),
+      password: passwordHash,
+      rol,
+    });
+    const saved = await usuario.save();
+    return saved._id;
   }
 
   async updatePassword(id, newHash) {
-    await pool.query('UPDATE usuarios SET password = ? WHERE id_usuario = ?', [newHash, id]);
+    await Usuario.findByIdAndUpdate(id, { password: newHash });
   }
+
   async findAll() {
-    const [rows] = await pool.query(
-      `SELECT id_usuario AS id, nombre, apellido, email, documento, rol, activo, created_at 
-       FROM usuarios ORDER BY rol, nombre`
-    );
-    return rows;
+    return await Usuario.find()
+      .select('-password')
+      .sort({ rol: 1, nombre: 1 })
+      .lean();
   }
 
   async findStudents() {
-    const [rows] = await pool.query(
-      `SELECT id_usuario AS id, nombre, apellido, email, rol, activo 
-       FROM usuarios WHERE rol = 'estudiante' AND activo = TRUE ORDER BY nombre`
-    );
-    return rows;
+    return await Usuario.find({ rol: 'estudiante', activo: true })
+      .select('_id nombre apellido email rol activo')
+      .sort({ nombre: 1 })
+      .lean();
   }
 
   async update(id, updateData) {
-    const fields = [];
-    const vals = [];
-    
-    for (const [key, value] of Object.entries(updateData)) {
-      if (value !== undefined) {
-        fields.push(`${key} = ?`);
-        vals.push(value);
-      }
-    }
-
-    if (fields.length === 0) return 0;
-    
-    vals.push(id);
-    const [result] = await pool.query(
-      `UPDATE usuarios SET ${fields.join(', ')} WHERE id_usuario = ?`, vals
-    );
-    
-    return result.affectedRows;
+    const result = await Usuario.findByIdAndUpdate(id, updateData, { new: true });
+    return result ? 1 : 0;
   }
 
   async updateActivo(id, activo) {
-    const [result] = await pool.query(
-      'UPDATE usuarios SET activo = ? WHERE id_usuario = ?', [activo ? 1 : 0, id]
-    );
-    return result.affectedRows;
+    const result = await Usuario.findByIdAndUpdate(id, { activo }, { new: true });
+    return result ? 1 : 0;
   }
 }
 

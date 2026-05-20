@@ -1,0 +1,218 @@
+<!-- NAV -->
+<nav class="nav" id="main-nav">
+    <a routerLink="/" class="nav-logo">
+        <img src="/img/logo.png" alt="EduHub Logo" style="height: 40px; width: auto;">
+        <span class="logo-text">Edu<em>Hub</em></span>
+    </a>
+    <div class="nav-links">
+        <a href="#noticias" class="nav-link">Noticias</a>
+        <a href="#funcionalidades" class="nav-link">Módulos</a>
+        <a href="#como-funciona" class="nav-link">Flujo</a>
+        <a href="#tecnologia" class="nav-link">Stack</a>
+    </div>
+    <div class="nav-right">
+        <button class="theme-btn" id="theme-btn" title="Cambiar tema" (click)="toggleTheme()">
+            <span class="theme-icon">🌓</span>
+        </button>
+        <a routerLink="/login" class="btn btn-ghost">Acceso</a>
+        <a routerLink="/login" class="btn btn-primary">
+            <span>Comenzar</span>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                    stroke-linejoin="round" />
+            </svg>
+        </a>
+    </div>
+</nav>
+
+<!-- HERO -->
+<header class="hero-wrap">
+    <div class="hero-noise"></div>
+    <div class="hero-grid-lines"></div>
+    <div class="hero-glow hero-glow-1"></div>
+    <div class="hero-glow hero-glow-2"></div>
+
+    <div class="hero-inner">
+        <div class="hero-content">
+            <div class="hero-tag">
+                <span class="hero-tag-dot"></span>
+                Konrad Lorenz · Semestre 2026-1
+            </div>
+            <h1 class="hero-title">
+                <span class="hero-title-line">Gestión</span>
+                <span class="hero-title-line hero-title-italic">Académica</span>
+                <span class="hero-title-line">Evolucionada.</span>
+            </h1>
+            <p class="hero-desc">
+                La plataforma inteligente que centraliza el éxito institucional con una experiencia moderna, rápida y
+                conectada.
+            </p>
+            <div class="hero-actions">
+                <a routerLink="/login" class="btn-hero-primary">Entrar ahora</a>
+                <a href="#noticias" class="btn-hero-ghost">Explorar</a>
+            </div>
+        </div>
+
+        <div class="hero-stats-panel">
+            <div class="stats-panel-inner">
+                <div class="stat-row">
+                    <div class="stat-item">
+                        <span class="stat-val" id="stat-usuarios">2.4k</span>
+                        <span class="stat-lbl">Usuarios</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-val" id="stat-proyectos">850</span>
+                        <span class="stat-lbl">Proyectos</span>
+                    </div>
+                </div>
+                <div class="tech-mini-stack">
+                    <span class="tech-mini">Arquitectura conectada</span>
+                    <span class="tech-mini">Datos en tiempo real</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="hero-scroll-hint">
+        <div class="scroll-line"></div>
+    </div>
+</header>
+
+<!-- PROGRAMS -->
+<section class="section programs-section" id="programas">
+    <div class="eyebrow">00 — Academia</div>
+    <h2 class="section-title">Programas <em>Destacados</em></h2>
+    <div class="features-grid">
+        <div class="feat-card">
+            <div class="feat-ico">🎓</div>
+            <h3>Pregrado</h3>
+            <p>Descubre tu vocación con programas diseñados para los retos del futuro.</p>
+            <a href="#" class="nav-link" style="margin-top: 16px; display: inline-block; color: var(--primary);">Ver
+                oferta →</a>
+        </div>
+        <div class="feat-card">
+            <div class="feat-ico">🧬</div>
+            <h3>Posgrado</h3>
+            <p>Especialízate y lidera en tu campo profesional con educación de alto nivel.</p>
+            <a href="#" class="nav-link" style="margin-top: 16px; display: inline-block; color: var(--primary);">Ver
+                oferta →</a>
+        </div>
+        <div class="feat-card">
+            <div class="feat-ico">🌍</div>
+            <h3>Internacional</h3>
+            <p>Conecta con el mundo a través de nuestros convenios y doble titulación.</p>
+            <a href="#" class="nav-link" style="margin-top: 16px; display: inline-block; color: var(--primary);">Más
+                info →</a>
+        </div>
+    </div>
+</section>
+
+<!-- NEWS -->
+<section class="section news-section" id="noticias">
+    <div class="eyebrow">01 — Comunicaciones</div>
+    <h2 class="section-title">Noticias <em>Institucionales</em></h2>
+    <div class="news-cascade-container" id="news-cascade">
+
+        <ng-container *ngIf="noticias.length > 0; else sinNoticias">
+            <div class="news-card" *ngFor="let n of noticias" (click)="abrirNoticia(n)">
+                <div class="news-img-wrap">
+                    <img *ngIf="n.imagen" [src]="'http://localhost:3000' + n.imagen" alt="Noticia"
+                        (error)="$event.target.style.display='none'">
+                    <div *ngIf="!n.imagen" class="news-img-placeholder">{{ n.emoji || '📌' }}</div>
+                </div>
+                <div class="news-body">
+                    <span class="news-tag">{{ n.categoria | titlecase }}</span>
+                    <h3 class="news-title">{{ n.titulo }}</h3>
+                    <p class="news-desc">{{ n.contenido | slice:0:100 }}{{ n.contenido.length > 100 ? '...' : '' }}</p>
+                </div>
+            </div>
+        </ng-container>
+
+        <ng-template #sinNoticias>
+            <div style="color:var(--text-muted); text-align:center; padding:40px; grid-column: 1/-1;">
+                No hay noticias publicadas aún.
+            </div>
+        </ng-template>
+
+    </div>
+</section>
+
+<!-- FEATURES -->
+<section class="section features-section" id="funcionalidades">
+    <div class="eyebrow">02 — Módulos</div>
+    <h2 class="section-title">Todo en un <em>Lugar</em></h2>
+    <div class="features-grid">
+        <div class="feat-card">
+            <div class="feat-ico">📁</div>
+            <h3>Proyectos</h3>
+            <p>Control total de ciclos de vida y estados en tiempo real.</p>
+        </div>
+        <div class="feat-card">
+            <div class="feat-ico">✅</div>
+            <h3>Tareas</h3>
+            <p>Asignación inteligente y alertas automáticas.</p>
+        </div>
+        <div class="feat-card">
+            <div class="feat-ico">📊</div>
+            <h3>Evaluaciones</h3>
+            <p>Registro histórico y retroalimentación directa.</p>
+        </div>
+    </div>
+</section>
+
+<!-- TECH -->
+<section class="section tech-section" id="tecnologia">
+    <div class="eyebrow">03 — Tech Stack</div>
+    <h2 class="section-title">Arquitectura <em>híbrida</em></h2>
+    <div class="tech-grid">
+        <div class="tech-card">Node.js</div>
+        <div class="tech-card">Express</div>
+        <div class="tech-card">MySQL</div>
+        <div class="tech-card">MongoDB</div>
+    </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+    <div class="cta-inner">
+        <h2>¿Listo para el <em>Cambio?</em></h2>
+        <p>Únete a la plataforma que está transformando la gestión académica.</p>
+        <a routerLink="/login" class="btn-cta-main">Empezar ahora</a>
+    </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+    <div class="footer-inner">
+        <div class="footer-brand">
+            <span class="logo-text">Edu<em>Hub</em></span>
+        </div>
+        <div class="footer-info">
+            <p>Konrad Lorenz · 2026</p>
+        </div>
+    </div>
+</footer>
+
+<!-- MODAL NOTICIA -->
+<div class="noticia-modal-overlay" *ngIf="noticiaSeleccionada" (click)="cerrarNoticia()">
+    <div class="noticia-modal" (click)="$event.stopPropagation()">
+        <button class="noticia-modal-close" (click)="cerrarNoticia()">✕</button>
+
+        <div class="noticia-modal-img" *ngIf="noticiaSeleccionada.imagen">
+            <img [src]="'http://localhost:3000' + noticiaSeleccionada.imagen" alt="Noticia">
+        </div>
+        <div class="noticia-modal-placeholder" *ngIf="!noticiaSeleccionada.imagen">
+            {{ noticiaSeleccionada.emoji || '📌' }}
+        </div>
+
+        <div class="noticia-modal-body">
+            <span class="news-tag">{{ noticiaSeleccionada.categoria | titlecase }}</span>
+            <h2 class="noticia-modal-title">{{ noticiaSeleccionada.titulo }}</h2>
+            <p class="noticia-modal-contenido">{{ noticiaSeleccionada.contenido }}</p>
+            <div class="noticia-modal-meta">
+                <span>{{ noticiaSeleccionada.createdAt | date:'dd MMM yyyy' }}</span>
+                <span *ngIf="noticiaSeleccionada.autor?.nombre">· {{ noticiaSeleccionada.autor.nombre }}</span>
+            </div>
+        </div>
+    </div>
+</div>

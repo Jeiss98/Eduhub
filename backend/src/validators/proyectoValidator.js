@@ -9,7 +9,7 @@ const createSchema = Joi.object({
     'string.empty': 'Título no puede estar vacío.'
   }),
   descripcion: Joi.string().allow('', null).optional(),
-  id_docente: Joi.number().integer().optional(),
+  id_docente: Joi.string().optional(),
   estado: estadoSchema.optional(),
   fecha_inicio: Joi.date().iso().required().messages({
     'any.required': 'fecha_inicio es obligatoria.',
@@ -24,7 +24,7 @@ const createSchema = Joi.object({
 const updateSchema = Joi.object({
   titulo: Joi.string().trim().optional(),
   descripcion: Joi.string().allow('', null).optional(),
-  id_docente: Joi.number().integer().optional(),
+  id_docente: Joi.string().optional(),
   estado: estadoSchema.optional(),
   fecha_inicio: Joi.date().iso().optional(),
   fecha_limite: Joi.date().iso().optional()

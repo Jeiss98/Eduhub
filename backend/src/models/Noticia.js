@@ -23,8 +23,8 @@ const NoticiaSchema = new mongoose.Schema(
       default: '📌',
     },
     autor: {
-      nombre:   { type: String, required: true },
-      id_mysql: { type: Number }, // referencia al id_usuario de MySQL
+      nombre:     { type: String, required: true },
+      usuario_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Usuario', default: null },
     },
     vistas: {
       type: Number,

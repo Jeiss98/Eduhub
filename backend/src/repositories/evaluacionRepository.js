@@ -1,114 +1,120 @@
-// repositories/evaluacionRepository.js
-const { pool } = require('../config/mysql');
+// repositories/evaluacionRepository.js — Mongoose (MongoDB)
+const Evaluacion = require('../models/mongo/evaluacion.model');
+const Proyecto   = require('../models/mongo/proyecto.model');
 
 class EvaluacionRepository {
   async findAll(reqUsuario) {
-    let query, params = [];
-    if (reqUsuario.rol === 'estudiante') {
-      query = `
-        SELECT e.id_evaluacion AS id, e.tipo, e.titulo, e.calificacion,
-               e.comentarios, e.fecha,
-               p.titulo AS proyecto, p.id_proyecto,
-               doc.nombre AS docente
-        FROM evaluaciones e
-        INNER JOIN proyectos p ON p.id_proyecto = e.id_proyecto
-        INNER JOIN usuarios doc ON doc.id_usuario = e.id_docente
-        WHERE e.id_estudiante = ?
-        ORDER BY e.fecha DESC`;
-      params = [reqUsuario.id];
-    } else if (reqUsuario.rol === 'docente') {
-      query = `
-        SELECT e.id_evaluacion AS id, e.tipo, e.titulo, e.calificacion,
-               e.comentarios, e.fecha,
-               p.titulo AS proyecto, p.id_proyecto,
-               est.nombre AS estudiante, est.apellido,
-               doc.nombre AS docente
-        FROM evaluaciones e
-        INNER JOIN proyectos p ON p.id_proyecto = e.id_proyecto
-        INNER JOIN usuarios est ON est.id_usuario = e.id_estudiante
-        INNER JOIN usuarios doc ON doc.id_usuario = e.id_docente
-        WHERE e.id_docente = ?
-        ORDER BY e.fecha DESC`;
-      params = [reqUsuario.id];
-    } else {
-      query = `
-        SELECT e.id_evaluacion AS id, e.tipo, e.titulo, e.calificacion,
-               e.comentarios, e.fecha,
-               p.titulo AS proyecto, p.id_proyecto,
-               est.nombre AS estudiante,
-               doc.nombre AS docente
-        FROM evaluaciones e
-        INNER JOIN proyectos p ON p.id_proyecto = e.id_proyecto
-        INNER JOIN usuarios est ON est.id_usuario = e.id_estudiante
-        INNER JOIN usuarios doc ON doc.id_usuario = e.id_docente
-        ORDER BY e.fecha DESC`;
-    }
+    const filtro = {};
 
-    const [rows] = await pool.query(query, params);
-    return rows;
+    if (reqUsuario.rol === 'estudiante') {
+      filtro.id_estudiante = reqUsuario.id;
+    } else if (reqUsuario.rol === 'docente') {
+      filtro.id_docente = reqUsuario.id;
+    }
+    // admin: sin filtro
+
+    const evals = await Evaluacion.find(filtro)
+      .populate('id_proyecto', 'titulo')
+      .populate('id_estudiante', 'nombre apellido')
+      .populate('id_docente', 'nombre')
+      .sort({ fecha: -1 })
+      .lean();
+
+    return evals.map((e) => ({
+      id:           e._id,
+      tipo:         e.tipo,
+      titulo:       e.titulo,
+      calificacion: e.calificacion,
+      comentarios:  e.comentarios,
+      fecha:        e.fecha,
+      proyecto:     e.id_proyecto?.titulo || null,
+      id_proyecto:  e.id_proyecto?._id || null,
+      estudiante:   e.id_estudiante?.nombre || null,
+      apellido:     e.id_estudiante?.apellido || null,
+      docente:      e.id_docente?.nombre || null,
+    }));
   }
 
   async findByEstudiante(estudianteId) {
-    const [rows] = await pool.query(`
-      SELECT e.id_evaluacion AS id, e.tipo, e.titulo, e.calificacion,
-             e.comentarios, e.fecha, p.titulo AS proyecto
-      FROM evaluaciones e
-      INNER JOIN proyectos p ON p.id_proyecto = e.id_proyecto
-      WHERE e.id_estudiante = ?
-      ORDER BY e.fecha DESC`, [estudianteId]);
-    return rows;
+    const evals = await Evaluacion.find({ id_estudiante: estudianteId })
+      .populate('id_proyecto', 'titulo')
+      .sort({ fecha: -1 })
+      .lean();
+
+    return evals.map((e) => ({
+      id:           e._id,
+      tipo:         e.tipo,
+      titulo:       e.titulo,
+      calificacion: e.calificacion,
+      comentarios:  e.comentarios,
+      fecha:        e.fecha,
+      proyecto:     e.id_proyecto?.titulo || null,
+    }));
   }
 
+  // Equivalente a sp_promedio_estudiante
   async callPromedioEstudiante(estudianteId) {
-    await pool.query('CALL sp_promedio_estudiante(?, @prom, @msg)', [estudianteId]);
-    const [[sp]] = await pool.query('SELECT @prom AS promedio_sp, @msg AS mensaje_sp');
-    return sp;
+    const evals = await Evaluacion.find({
+      id_estudiante: estudianteId,
+      calificacion: { $ne: null },
+    })
+      .select('calificacion')
+      .lean();
+
+    if (evals.length === 0) {
+      return { promedio_sp: null, mensaje_sp: 'Sin evaluaciones' };
+    }
+    const sum = evals.reduce((acc, e) => acc + e.calificacion, 0);
+    const promedio = Math.round((sum / evals.length) * 100) / 100;
+    return {
+      promedio_sp: promedio,
+      mensaje_sp: `Promedio calculado sobre ${evals.length} evaluación(es)`,
+    };
   }
 
   async checkStudentInProject(proyectoId, estudianteId) {
-    const [[inscrito]] = await pool.query(
-      'SELECT 1 FROM proyecto_estudiantes WHERE id_proyecto = ? AND id_estudiante = ?',
-      [proyectoId, estudianteId]
-    );
-    return !!inscrito;
+    const p = await Proyecto.findOne({
+      _id: proyectoId,
+      estudiantes: estudianteId,
+    }).lean();
+    return !!p;
   }
 
   async create(data, docenteId) {
     const { id_proyecto, id_estudiante, tipo, titulo, calificacion, comentarios } = data;
-    const [result] = await pool.query(
-      `INSERT INTO evaluaciones (id_proyecto, id_estudiante, id_docente, tipo, titulo, calificacion, comentarios)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [id_proyecto, id_estudiante, docenteId, tipo, titulo.trim(),
-       calificacion !== undefined ? calificacion : null, comentarios || null]
-    );
-    return result.insertId;
+    const evaluacion = new Evaluacion({
+      id_proyecto,
+      id_estudiante,
+      id_docente: docenteId,
+      tipo: tipo || 'entrega',
+      titulo: titulo.trim(),
+      calificacion: calificacion !== undefined ? calificacion : null,
+      comentarios: comentarios || null,
+    });
+    const saved = await evaluacion.save();
+    return saved._id;
   }
 
   async update(id, data, reqUsuario) {
     const { titulo, calificacion, comentarios, tipo } = data;
-    const whereExtra = reqUsuario.rol === 'docente' ? 'AND id_docente = ?' : '';
-    const params = [titulo, calificacion, comentarios, tipo, id];
-    if (reqUsuario.rol === 'docente') params.push(reqUsuario.id);
+    const filtro = { _id: id };
+    if (reqUsuario.rol === 'docente') filtro.id_docente = reqUsuario.id;
 
-    const [result] = await pool.query(
-      `UPDATE evaluaciones SET
-         titulo       = COALESCE(?, titulo),
-         calificacion = COALESCE(?, calificacion),
-         comentarios  = COALESCE(?, comentarios),
-         tipo         = COALESCE(?, tipo)
-       WHERE id_evaluacion = ? ${whereExtra}`, params
-    );
-    return result.affectedRows;
+    const updateFields = {};
+    if (titulo      !== undefined) updateFields.titulo      = titulo;
+    if (calificacion !== undefined) updateFields.calificacion = calificacion;
+    if (comentarios !== undefined) updateFields.comentarios = comentarios;
+    if (tipo        !== undefined) updateFields.tipo        = tipo;
+
+    const result = await Evaluacion.findOneAndUpdate(filtro, updateFields, { new: true });
+    return result ? 1 : 0;
   }
 
   async delete(id, reqUsuario) {
-    const whereExtra = reqUsuario.rol === 'docente' ? 'AND id_docente = ?' : '';
-    const params = reqUsuario.rol === 'docente' ? [id, reqUsuario.id] : [id];
-
-    const [result] = await pool.query(
-      `DELETE FROM evaluaciones WHERE id_evaluacion = ? ${whereExtra}`, params
-    );
-    return result.affectedRows;
+    const filtro = { _id: id };
+    if (reqUsuario.rol === 'docente') filtro.id_docente = reqUsuario.id;
+    const result = await Evaluacion.findOneAndDelete(filtro);
+    return result ? 1 : 0;
   }
 }
 

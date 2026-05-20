@@ -1,13 +1,11 @@
-// server.js
+// server.js — Solo MongoDB, sin MySQL
 require('dotenv').config();
 const app = require('./src/app');
-const { testConnection } = require('./src/config/mysql');
 const { connectMongo } = require('./src/config/mongodb');
 
 const PORT = process.env.PORT || 3000;
 
 async function start() {
-  await testConnection();
   await connectMongo();
 
   const server = app.listen(PORT, () => {

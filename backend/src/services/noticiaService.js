@@ -43,7 +43,8 @@ class NoticiaService {
       categoria: categoria || 'academico',
       emoji: emoji || '📌',
       destacada: destacada === 'true' || destacada === true,
-      autor: { nombre: reqUsuario.nombre, id_mysql: reqUsuario.id },
+      activa: true, // ← siempre true al crear
+      autor: { nombre: reqUsuario.nombre, usuario_id: reqUsuario.id },
       imagen: file ? `/uploads/noticias/${file.filename}` : null
     };
 
@@ -65,6 +66,16 @@ class NoticiaService {
   async deleteNoticia(id) {
     const noticia = await noticiaRepository.softDelete(id);
     if (!noticia) throw { status: 404, message: 'Noticia no encontrada.' };
+  }
+
+  // ← ruta de migración para noticias sin campo activa
+  async fixActiva() {
+    const Noticia = require('../models/Noticia');
+    const result = await Noticia.updateMany(
+      { activa: { $exists: false } },
+      { $set: { activa: true } }
+    );
+    return result.modifiedCount;
   }
 }
 

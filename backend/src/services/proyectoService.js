@@ -25,7 +25,15 @@ class ProyectoService {
   }
 
   async createProyecto(reqUsuario, data) {
-    const docenteId = reqUsuario.rol === 'admin' && data.id_docente ? data.id_docente : reqUsuario.id;
+    let docenteId = reqUsuario.rol === 'admin' && data.id_docente ? data.id_docente : reqUsuario.id;
+    
+    // Fallback for old tokens where reqUsuario.id is undefined
+    if (!docenteId && reqUsuario.email) {
+      const { Usuario } = require('../models/mongo/usuario.model');
+      const userDoc = await Usuario.findOne({ email: reqUsuario.email });
+      if (userDoc) docenteId = userDoc._id;
+    }
+
     const newId = await proyectoRepository.create(docenteId, data);
     return newId;
   }

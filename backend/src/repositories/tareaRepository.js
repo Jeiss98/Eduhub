@@ -1,114 +1,121 @@
-// repositories/tareaRepository.js
-const { pool } = require('../config/mysql');
+// repositories/tareaRepository.js — Mongoose (MongoDB)
+const Tarea   = require('../models/mongo/tarea.model');
+const Proyecto = require('../models/mongo/proyecto.model');
 
 class TareaRepository {
   async findAll(queryParams, reqUsuario) {
-    let query, params = [];
     const { proyecto_id, estado, prioridad } = queryParams;
+    const filtro = {};
 
     if (reqUsuario.rol === 'estudiante') {
-      query = `
-        SELECT t.id_tarea AS id, t.titulo, t.descripcion, t.prioridad,
-               t.completada, t.fecha_limite, t.created_at,
-               p.titulo AS proyecto, p.id_proyecto,
-               fn_estado_tarea(t.id_tarea) AS estado_actual
-        FROM tareas t
-        INNER JOIN proyectos p ON p.id_proyecto = t.id_proyecto
-        WHERE t.id_estudiante = ?`;
-      params = [reqUsuario.id];
-    } else {
-      query = `
-        SELECT t.id_tarea AS id, t.titulo, t.descripcion, t.prioridad,
-               t.completada, t.fecha_limite, t.created_at,
-               p.titulo AS proyecto, p.id_proyecto,
-               u.nombre AS estudiante,
-               fn_estado_tarea(t.id_tarea) AS estado_actual
-        FROM tareas t
-        INNER JOIN proyectos p ON p.id_proyecto = t.id_proyecto
-        INNER JOIN usuarios u ON u.id_usuario = t.id_estudiante
-        WHERE 1=1`;
-      if (reqUsuario.rol === 'docente') {
-        query += ' AND p.id_docente = ?';
-        params.push(reqUsuario.id);
-      }
+      filtro.id_estudiante = reqUsuario.id;
+    } else if (reqUsuario.rol === 'docente') {
+      // Obtener proyectos del docente
+      const proyectosDocente = await Proyecto.find({ id_docente: reqUsuario.id })
+        .select('_id')
+        .lean();
+      const ids = proyectosDocente.map((p) => p._id);
+      filtro.id_proyecto = { $in: ids };
     }
+    // admin: sin filtro de dueño
 
-    if (proyecto_id) { query += ' AND t.id_proyecto = ?'; params.push(proyecto_id); }
-    if (prioridad)   { query += ' AND t.prioridad = ?';   params.push(prioridad); }
-    if (estado === 'completada')   { query += ' AND t.completada = TRUE'; }
-    if (estado === 'pendiente')    { query += ' AND t.completada = FALSE'; }
+    if (proyecto_id) filtro.id_proyecto = proyecto_id;
+    if (prioridad)   filtro.prioridad   = prioridad;
+    if (estado === 'completada') filtro.completada = true;
+    if (estado === 'pendiente')  filtro.completada = false;
 
-    query += ' ORDER BY t.completada ASC, t.fecha_limite ASC';
+    const tareas = await Tarea.find(filtro)
+      .populate('id_proyecto', 'titulo')
+      .populate('id_estudiante', 'nombre apellido')
+      .sort({ completada: 1, fecha_limite: 1 })
+      .lean();
 
-    const [rows] = await pool.query(query, params);
-    return rows;
+    return tareas.map((t) => ({
+      id:           t._id,
+      titulo:       t.titulo,
+      descripcion:  t.descripcion,
+      prioridad:    t.prioridad,
+      completada:   t.completada,
+      fecha_limite: t.fecha_limite,
+      created_at:   t.createdAt,
+      proyecto:     t.id_proyecto?.titulo || null,
+      id_proyecto:  t.id_proyecto?._id || null,
+      estudiante:   t.id_estudiante?.nombre || null,
+      estado_actual: t.completada
+        ? 'completada'
+        : (t.fecha_limite && new Date(t.fecha_limite) < new Date() ? 'vencida' : 'pendiente'),
+    }));
   }
 
   async findById(id) {
-    const [[tarea]] = await pool.query(`
-      SELECT t.id_tarea AS id, t.titulo, t.descripcion, t.prioridad,
-             t.completada, t.fecha_limite, t.created_at,
-             p.titulo AS proyecto, p.id_proyecto,
-             u.nombre AS estudiante, u.email AS email_estudiante,
-             fn_estado_tarea(t.id_tarea) AS estado_actual
-      FROM tareas t
-      INNER JOIN proyectos p ON p.id_proyecto = t.id_proyecto
-      INNER JOIN usuarios u  ON u.id_usuario  = t.id_estudiante
-      WHERE t.id_tarea = ?`, [id]);
-    return tarea || null;
+    const t = await Tarea.findById(id)
+      .populate('id_proyecto', 'titulo')
+      .populate('id_estudiante', 'nombre apellido email')
+      .lean();
+    if (!t) return null;
+    return {
+      id:              t._id,
+      titulo:          t.titulo,
+      descripcion:     t.descripcion,
+      prioridad:       t.prioridad,
+      completada:      t.completada,
+      fecha_limite:    t.fecha_limite,
+      created_at:      t.createdAt,
+      proyecto:        t.id_proyecto?.titulo || null,
+      id_proyecto:     t.id_proyecto?._id || null,
+      estudiante:      t.id_estudiante?.nombre || null,
+      email_estudiante:t.id_estudiante?.email || null,
+      estado_actual:   t.completada
+        ? 'completada'
+        : (t.fecha_limite && new Date(t.fecha_limite) < new Date() ? 'vencida' : 'pendiente'),
+    };
   }
 
   async checkStudentInProject(proyectoId, estudianteId) {
-    const [[inscrito]] = await pool.query(
-      'SELECT 1 FROM proyecto_estudiantes WHERE id_proyecto = ? AND id_estudiante = ?',
-      [proyectoId, estudianteId]
-    );
-    return !!inscrito;
+    const p = await Proyecto.findOne({
+      _id: proyectoId,
+      estudiantes: estudianteId,
+    }).lean();
+    return !!p;
   }
 
   async create(data) {
     const { id_proyecto, id_estudiante, titulo, descripcion, prioridad, fecha_limite } = data;
-    const [result] = await pool.query(
-      `INSERT INTO tareas (id_proyecto, id_estudiante, titulo, descripcion, prioridad, fecha_limite)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [id_proyecto, id_estudiante, titulo.trim(), descripcion || null, prioridad, fecha_limite]
-    );
-    return result.insertId;
+    const tarea = new Tarea({
+      id_proyecto,
+      id_estudiante,
+      titulo: titulo.trim(),
+      descripcion: descripcion || null,
+      prioridad: prioridad || 'media',
+      fecha_limite: fecha_limite || null,
+    });
+    const saved = await tarea.save();
+    return saved._id;
   }
 
   async completeTarea(id, estudianteId = null) {
-    let query, params;
-    if (estudianteId) {
-      query  = 'UPDATE tareas SET completada = TRUE WHERE id_tarea = ? AND id_estudiante = ?';
-      params = [id, estudianteId];
-    } else {
-      query  = 'UPDATE tareas SET completada = TRUE WHERE id_tarea = ?';
-      params = [id];
-    }
-    const [result] = await pool.query(query, params);
-    return result.affectedRows;
+    const filtro = { _id: id };
+    if (estudianteId) filtro.id_estudiante = estudianteId;
+    const result = await Tarea.findOneAndUpdate(filtro, { completada: true }, { new: true });
+    return result ? 1 : 0;
   }
 
   async update(id, data) {
     const { titulo, descripcion, prioridad, fecha_limite, completada } = data;
-    const [result] = await pool.query(
-      `UPDATE tareas SET
-         titulo       = COALESCE(?, titulo),
-         descripcion  = COALESCE(?, descripcion),
-         prioridad    = COALESCE(?, prioridad),
-         fecha_limite = COALESCE(?, fecha_limite),
-         completada   = COALESCE(?, completada)
-       WHERE id_tarea = ?`,
-      [titulo, descripcion, prioridad, fecha_limite,
-       completada !== undefined ? (completada ? 1 : 0) : null,
-       id]
-    );
-    return result.affectedRows;
+    const updateFields = {};
+    if (titulo       !== undefined) updateFields.titulo       = titulo;
+    if (descripcion  !== undefined) updateFields.descripcion  = descripcion;
+    if (prioridad    !== undefined) updateFields.prioridad    = prioridad;
+    if (fecha_limite !== undefined) updateFields.fecha_limite = fecha_limite;
+    if (completada   !== undefined) updateFields.completada   = !!completada;
+
+    const result = await Tarea.findByIdAndUpdate(id, updateFields, { new: true });
+    return result ? 1 : 0;
   }
 
   async delete(id) {
-    const [result] = await pool.query('DELETE FROM tareas WHERE id_tarea = ?', [id]);
-    return result.affectedRows;
+    const result = await Tarea.findByIdAndDelete(id);
+    return result ? 1 : 0;
   }
 }
 

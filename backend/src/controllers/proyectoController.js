@@ -1,4 +1,4 @@
-// controllers/proyectoController.js
+// controllers/proyectoController.js — IDs como string (MongoDB ObjectId)
 const proyectoService = require('../services/proyectoService');
 
 class ProyectoController {
@@ -13,7 +13,7 @@ class ProyectoController {
 
   async getProyectoDetail(req, res, next) {
     try {
-      const detail = await proyectoService.getProyectoDetail(parseInt(req.params.id, 10));
+      const detail = await proyectoService.getProyectoDetail(req.params.id);
       res.json({ ok: true, data: detail });
     } catch (error) {
       next(error);
@@ -31,7 +31,7 @@ class ProyectoController {
 
   async updateProyecto(req, res, next) {
     try {
-      await proyectoService.updateProyecto(parseInt(req.params.id, 10), req.body, req.usuario);
+      await proyectoService.updateProyecto(req.params.id, req.body, req.usuario);
       res.json({ ok: true, mensaje: 'Proyecto actualizado correctamente.' });
     } catch (error) {
       next(error);
@@ -40,7 +40,7 @@ class ProyectoController {
 
   async deleteProyecto(req, res, next) {
     try {
-      await proyectoService.deleteProyecto(parseInt(req.params.id, 10));
+      await proyectoService.deleteProyecto(req.params.id);
       res.json({ ok: true, mensaje: 'Proyecto eliminado.' });
     } catch (error) {
       next(error);
@@ -49,7 +49,7 @@ class ProyectoController {
 
   async assignStudent(req, res, next) {
     try {
-      const mensaje = await proyectoService.assignStudent(parseInt(req.params.id, 10), req.body.usuario_id);
+      const mensaje = await proyectoService.assignStudent(req.params.id, req.body.usuario_id);
       res.status(201).json({ ok: true, mensaje });
     } catch (error) {
       next(error);
@@ -58,7 +58,7 @@ class ProyectoController {
 
   async removeStudent(req, res, next) {
     try {
-      await proyectoService.removeStudent(parseInt(req.params.id, 10), parseInt(req.params.uid, 10));
+      await proyectoService.removeStudent(req.params.id, req.params.uid);
       res.json({ ok: true, mensaje: 'Estudiante desvinculado del proyecto.' });
     } catch (error) {
       next(error);

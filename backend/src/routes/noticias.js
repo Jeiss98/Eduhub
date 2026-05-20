@@ -1,4 +1,3 @@
-// routes/noticias.js
 const express = require('express');
 const multer = require('multer');
 const path = require('path');
@@ -31,10 +30,32 @@ const upload = multer({
   },
 });
 
+// ── Rutas temporales (borrar después de usar) ──
+router.get('/fix-activa', async (req, res, next) => {
+  try {
+    const Noticia = require('../models/Noticia');
+    const result = await Noticia.updateMany(
+      { $or: [{ activa: { $exists: false } }, { activa: false }] },
+      { $set: { activa: true } }
+    );
+    res.json({ ok: true, mensaje: `${result.modifiedCount} noticias actualizadas a activa: true` });
+  } catch (err) { next(err); }
+});
+
+router.get('/debug', async (req, res, next) => {
+  try {
+    const Noticia = require('../models/Noticia');
+    const todas = await Noticia.find({}).select('titulo activa').lean();
+    res.json(todas);
+  } catch (err) { next(err); }
+});
+
+// ── Rutas públicas ──
 router.get('/', noticiaController.getNoticias);
 router.get('/destacadas', noticiaController.getDestacadas);
 router.get('/:id', noticiaController.getNoticia);
 
+// ── Rutas protegidas ──
 router.post('/', authMiddleware, roleMiddleware('docente', 'admin'), upload.single('imagen'), validate(createSchema), noticiaController.createNoticia);
 router.put('/:id', authMiddleware, roleMiddleware('admin', 'docente'), upload.single('imagen'), validate(updateSchema), noticiaController.updateNoticia);
 router.delete('/:id', authMiddleware, roleMiddleware('admin', 'docente'), noticiaController.deleteNoticia);

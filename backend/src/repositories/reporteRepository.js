@@ -1,72 +1,154 @@
-// repositories/reporteRepository.js
-const { pool } = require('../config/mysql');
+// repositories/reporteRepository.js — Mongoose (MongoDB)
+const { Usuario }  = require('../models/mongo/usuario.model');
+const Proyecto     = require('../models/mongo/proyecto.model');
+const Tarea        = require('../models/mongo/tarea.model');
+const Evaluacion   = require('../models/mongo/evaluacion.model');
+
+// Helper: calcular avance de proyecto
+async function calcularAvance(proyectoId) {
+  const [total, completadas] = await Promise.all([
+    Tarea.countDocuments({ id_proyecto: proyectoId }),
+    Tarea.countDocuments({ id_proyecto: proyectoId, completada: true }),
+  ]);
+  return total === 0 ? 0 : Math.round((completadas / total) * 100);
+}
+
+// Helper: calcular promedio de calificaciones de un estudiante
+async function calcularPromedioEstudiante(estudianteId) {
+  const result = await Evaluacion.aggregate([
+    { $match: { id_estudiante: estudianteId, calificacion: { $ne: null } } },
+    { $group: { _id: null, prom: { $avg: '$calificacion' } } },
+  ]);
+  return result.length > 0 ? Math.round(result[0].prom * 100) / 100 : null;
+}
 
 class ReporteRepository {
   async getDashboardStats() {
-    const queries = await Promise.all([
-      pool.query('SELECT COUNT(*) AS total FROM usuarios WHERE activo = TRUE'),
-      pool.query('SELECT COUNT(*) AS total FROM proyectos WHERE estado = "activo"'),
-      pool.query('SELECT COUNT(*) AS total FROM tareas WHERE completada = FALSE'),
-      pool.query('SELECT ROUND(AVG(calificacion),2) AS prom FROM evaluaciones WHERE calificacion IS NOT NULL'),
-      pool.query(`
-        SELECT p.titulo, fn_avance_proyecto(p.id_proyecto) AS avance, p.estado
-        FROM proyectos p ORDER BY avance DESC LIMIT 5`),
-      pool.query(`
-        SELECT u.nombre, fn_promedio_estudiante(u.id_usuario) AS promedio
-        FROM usuarios u WHERE u.rol = 'estudiante' AND u.activo = TRUE
-        ORDER BY promedio DESC LIMIT 5`),
+    const hoy = new Date();
+
+    const [
+      usuariosActivos,
+      proyectosActivos,
+      tareasPendientes,
+      promGeneral,
+      topProyectosDocs,
+      topEstudiantesDocs,
+    ] = await Promise.all([
+      Usuario.countDocuments({ activo: true }),
+      Proyecto.countDocuments({ estado: 'activo' }),
+      Tarea.countDocuments({ completada: false }),
+      Evaluacion.aggregate([
+        { $match: { calificacion: { $ne: null } } },
+        { $group: { _id: null, prom: { $avg: '$calificacion' } } },
+      ]),
+      Proyecto.find().sort({ createdAt: -1 }).limit(5).lean(),
+      Usuario.find({ rol: 'estudiante', activo: true }).select('_id nombre').limit(5).lean(),
     ]);
 
+    // Enriquecer top proyectos
+    const top_proyectos = await Promise.all(
+      topProyectosDocs.map(async (p) => ({
+        titulo: p.titulo,
+        estado: p.estado,
+        avance: await calcularAvance(p._id),
+      }))
+    );
+
+    // Enriquecer top estudiantes
+    const top_estudiantes = await Promise.all(
+      topEstudiantesDocs.map(async (u) => ({
+        nombre:   u.nombre,
+        promedio: await calcularPromedioEstudiante(u._id),
+      }))
+    );
+    top_estudiantes.sort((a, b) => (b.promedio || 0) - (a.promedio || 0));
+
     return {
-      usuarios_activos: queries[0][0][0].total,
-      proyectos_activos: queries[1][0][0].total,
-      tareas_pendientes: queries[2][0][0].total,
-      promedio_general: queries[3][0][0].prom,
-      top_proyectos: queries[4][0],
-      top_estudiantes: queries[5][0],
+      usuarios_activos:   usuariosActivos,
+      proyectos_activos:  proyectosActivos,
+      tareas_pendientes:  tareasPendientes,
+      promedio_general:   promGeneral.length > 0
+        ? Math.round(promGeneral[0].prom * 100) / 100
+        : null,
+      top_proyectos,
+      top_estudiantes,
     };
   }
 
   async getProyectosReport() {
-    const [rows] = await pool.query(`
-      SELECT p.id_proyecto AS id, p.titulo, p.estado, p.fecha_limite,
-             u.nombre AS docente,
-             COUNT(DISTINCT pe.id_estudiante) AS estudiantes,
-             fn_avance_proyecto(p.id_proyecto) AS avance_pct,
-             fn_promedio_proyecto(p.id_proyecto) AS calificacion_prom
-      FROM proyectos p
-      INNER JOIN usuarios u ON u.id_usuario = p.id_docente
-      LEFT JOIN proyecto_estudiantes pe ON pe.id_proyecto = p.id_proyecto
-      GROUP BY p.id_proyecto
-      ORDER BY p.estado, p.fecha_limite`);
-    return rows;
+    const proyectos = await Proyecto.find()
+      .populate('id_docente', 'nombre')
+      .lean();
+
+    return Promise.all(
+      proyectos.map(async (p) => {
+        const [avance_pct, calificaciones] = await Promise.all([
+          calcularAvance(p._id),
+          Evaluacion.aggregate([
+            { $match: { id_proyecto: p._id, calificacion: { $ne: null } } },
+            { $group: { _id: null, prom: { $avg: '$calificacion' } } },
+          ]),
+        ]);
+        return {
+          id:               p._id,
+          titulo:           p.titulo,
+          estado:           p.estado,
+          fecha_limite:     p.fecha_limite,
+          docente:          p.id_docente?.nombre || null,
+          estudiantes:      p.estudiantes?.length ?? 0,
+          avance_pct,
+          calificacion_prom: calificaciones.length > 0
+            ? Math.round(calificaciones[0].prom * 100) / 100
+            : null,
+        };
+      })
+    );
   }
 
   async getTareasVencidas() {
-    const [rows] = await pool.query(`
-      SELECT t.titulo AS tarea, t.prioridad, t.fecha_limite,
-             u.nombre AS estudiante, u.email,
-             p.titulo AS proyecto
-      FROM tareas t
-      INNER JOIN usuarios u ON u.id_usuario = t.id_estudiante
-      INNER JOIN proyectos p ON p.id_proyecto = t.id_proyecto
-      WHERE t.completada = FALSE AND t.fecha_limite < CURRENT_DATE
-      ORDER BY t.fecha_limite ASC`);
-    return rows;
+    const hoy = new Date();
+    const tareas = await Tarea.find({
+      completada: false,
+      fecha_limite: { $lt: hoy },
+    })
+      .populate('id_estudiante', 'nombre email')
+      .populate('id_proyecto', 'titulo')
+      .sort({ fecha_limite: 1 })
+      .lean();
+
+    return tareas.map((t) => ({
+      tarea:        t.titulo,
+      prioridad:    t.prioridad,
+      fecha_limite: t.fecha_limite,
+      estudiante:   t.id_estudiante?.nombre || null,
+      email:        t.id_estudiante?.email || null,
+      proyecto:     t.id_proyecto?.titulo || null,
+    }));
   }
 
   async getEstudiantesReport() {
-    const [rows] = await pool.query(`
-      SELECT u.id_usuario AS id, u.nombre, u.apellido, u.email,
-             fn_promedio_estudiante(u.id_usuario) AS promedio,
-             fn_tareas_pendientes(u.id_usuario) AS tareas_pendientes,
-             COUNT(DISTINCT pe.id_proyecto) AS proyectos
-      FROM usuarios u
-      LEFT JOIN proyecto_estudiantes pe ON pe.id_estudiante = u.id_usuario
-      WHERE u.rol = 'estudiante' AND u.activo = TRUE
-      GROUP BY u.id_usuario
-      ORDER BY promedio DESC`);
-    return rows;
+    const estudiantes = await Usuario.find({ rol: 'estudiante', activo: true })
+      .select('_id nombre apellido email')
+      .lean();
+
+    return Promise.all(
+      estudiantes.map(async (u) => {
+        const [promedio, tareasPend, proyectosCount] = await Promise.all([
+          calcularPromedioEstudiante(u._id),
+          Tarea.countDocuments({ id_estudiante: u._id, completada: false }),
+          Proyecto.countDocuments({ estudiantes: u._id }),
+        ]);
+        return {
+          id:               u._id,
+          nombre:           u.nombre,
+          apellido:         u.apellido,
+          email:            u.email,
+          promedio,
+          tareas_pendientes: tareasPend,
+          proyectos:         proyectosCount,
+        };
+      })
+    );
   }
 }
 

@@ -1,4 +1,4 @@
-// controllers/tareaController.js
+// controllers/tareaController.js — IDs como string (MongoDB ObjectId)
 const tareaService = require('../services/tareaService');
 
 class TareaController {
@@ -13,7 +13,7 @@ class TareaController {
 
   async getTarea(req, res, next) {
     try {
-      const tarea = await tareaService.getTareaById(parseInt(req.params.id, 10));
+      const tarea = await tareaService.getTareaById(req.params.id);
       res.json({ ok: true, data: tarea });
     } catch (error) {
       next(error);
@@ -31,7 +31,7 @@ class TareaController {
 
   async completeTarea(req, res, next) {
     try {
-      await tareaService.completeTarea(parseInt(req.params.id, 10), req.usuario);
+      await tareaService.completeTarea(req.params.id, req.usuario);
       res.json({ ok: true, mensaje: 'Tarea marcada como completada.' });
     } catch (error) {
       next(error);
@@ -40,7 +40,7 @@ class TareaController {
 
   async updateTarea(req, res, next) {
     try {
-      await tareaService.updateTarea(parseInt(req.params.id, 10), req.body);
+      await tareaService.updateTarea(req.params.id, req.body);
       res.json({ ok: true, mensaje: 'Tarea actualizada.' });
     } catch (error) {
       next(error);
@@ -49,7 +49,7 @@ class TareaController {
 
   async deleteTarea(req, res, next) {
     try {
-      await tareaService.deleteTarea(parseInt(req.params.id, 10));
+      await tareaService.deleteTarea(req.params.id);
       res.json({ ok: true, mensaje: 'Tarea eliminada.' });
     } catch (error) {
       next(error);

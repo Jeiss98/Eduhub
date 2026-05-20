@@ -20,7 +20,12 @@ class AuthService {
     }
 
     const token = jwt.sign(
-      { id: user.id, nombre: user.nombre, email: user.email, rol: user.rol },
+      {
+        id: user._id.toString(), // ← fix: string limpio, evita problemas de ObjectId en el JWT
+        nombre: user.nombre,
+        email: user.email,
+        rol: user.rol,
+      },
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES || '24h' }
     );
@@ -28,12 +33,12 @@ class AuthService {
     return {
       token,
       usuario: {
-        id: user.id,
+        id: user._id.toString(),
         nombre: user.nombre,
         apellido: user.apellido,
         email: user.email,
         rol: user.rol,
-      }
+      },
     };
   }
 
@@ -43,22 +48,21 @@ class AuthService {
       throw { status: 409, message: 'El correo ya está registrado.' };
     }
 
-    // La contraseña inicial será el documento de identidad
     const tempPass = userData.documento;
     if (!tempPass) {
       throw { status: 400, message: 'El documento es obligatorio para generar la contraseña inicial.' };
     }
 
     const passwordHash = await bcrypt.hash(tempPass, 10);
-    
+
     const newId = await usuarioRepository.create({
       ...userData,
-      passwordHash
+      passwordHash,
     });
 
     return {
       id: newId,
-      contrasena_temporal: tempPass
+      contrasena_temporal: tempPass,
     };
   }
 
@@ -82,7 +86,6 @@ class AuthService {
     if (!user) {
       throw { status: 404, message: 'Usuario no encontrado.' };
     }
-    // Ocultar password
     delete user.password;
     return user;
   }

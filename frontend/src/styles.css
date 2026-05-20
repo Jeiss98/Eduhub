@@ -1,0 +1,119 @@
+/* ═══════════════════════════════════════════════════════════
+   styles.css — EduHub Global
+   Variables de tema compartidas por todos los componentes
+═══════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800;900&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+/* ══ TEMA LIGHT (default) ══ */
+:root {
+    /* Fonts */
+    --font-display: 'Sora', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+
+    /* Brand */
+    --brand-green: #16a34a;
+    --brand-green2: #15803d;
+    --brand-green3: #4ade80;
+    --brand-dark: #0B0B18;
+
+    /* Backgrounds */
+    --bg: #f8f9fb;
+    --bg2: #f1f5f9;
+    --surface: #ffffff;
+    --surface2: #f8fafc;
+
+    /* Text */
+    --text: #0f172a;
+    --text2: #1e293b;
+    --muted: #64748b;
+    --muted2: #94a3b8;
+
+    /* Borders */
+    --border: #e2e8f0;
+    --border2: #cbd5e1;
+
+    /* States */
+    --success-bg: rgba(22, 163, 74, 0.08);
+    --success-border: rgba(22, 163, 74, 0.2);
+    --warning: #d97706;
+    --warning-bg: rgba(217, 119, 6, 0.08);
+    --danger: #dc2626;
+    --danger-bg: rgba(220, 38, 38, 0.08);
+    --info: #0284c7;
+    --info-bg: rgba(2, 132, 199, 0.08);
+    --amber: #f59e0b;
+
+    /* Shadows */
+    --sh0: 0 1px 2px rgba(0, 0, 0, 0.04);
+    --sh-card: 0 1px 4px rgba(0, 0, 0, 0.06);
+    --sh2: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --sh3: 0 8px 32px rgba(0, 0, 0, 0.12);
+
+    /* Radios */
+    --r6: 6px;
+    --r8: 8px;
+    --r10: 10px;
+    --r12: 12px;
+    --r16: 16px;
+}
+
+/* ══ TEMA DARK ══ */
+[data-theme="dark"] {
+    /* Backgrounds */
+    --bg: #0B0B18;
+    --bg2: #0f0f1f;
+    --surface: #13131f;
+    --surface2: #1a1a2e;
+
+    /* Text */
+    --text: #f1f5f9;
+    --text2: #e2e8f0;
+    --muted: #94a3b8;
+    --muted2: #64748b;
+
+    /* Borders */
+    --border: #1e1e35;
+    --border2: #2a2a45;
+
+    /* Brand en dark */
+    --brand-green: #4ade80;
+    --brand-green2: #22c55e;
+    --brand-green3: #86efac;
+
+    /* States dark */
+    --success-bg: rgba(74, 222, 128, 0.08);
+    --success-border: rgba(74, 222, 128, 0.2);
+    --warning: #fbbf24;
+    --warning-bg: rgba(251, 191, 36, 0.08);
+    --danger: #f87171;
+    --danger-bg: rgba(248, 113, 113, 0.08);
+    --info: #38bdf8;
+    --info-bg: rgba(56, 189, 248, 0.08);
+    --amber: #fbbf24;
+
+    /* Shadows dark */
+    --sh0: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --sh-card: 0 1px 4px rgba(0, 0, 0, 0.4);
+    --sh2: 0 4px 12px rgba(0, 0, 0, 0.5);
+    --sh3: 0 8px 32px rgba(0, 0, 0, 0.6);
+}
+
+body {
+    font-family: var(--font-body);
+    background: var(--bg);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+}

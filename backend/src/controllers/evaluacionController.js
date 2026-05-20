@@ -1,4 +1,4 @@
-// controllers/evaluacionController.js
+// controllers/evaluacionController.js — IDs como string (MongoDB ObjectId)
 const evaluacionService = require('../services/evaluacionService');
 
 class EvaluacionController {
@@ -13,7 +13,7 @@ class EvaluacionController {
 
   async getEvaluacionesEstudiante(req, res, next) {
     try {
-      const result = await evaluacionService.getEvaluacionesEstudiante(parseInt(req.params.id, 10));
+      const result = await evaluacionService.getEvaluacionesEstudiante(req.params.id);
       res.json({ ok: true, ...result });
     } catch (error) {
       next(error);
@@ -31,7 +31,7 @@ class EvaluacionController {
 
   async updateEvaluacion(req, res, next) {
     try {
-      await evaluacionService.updateEvaluacion(parseInt(req.params.id, 10), req.body, req.usuario);
+      await evaluacionService.updateEvaluacion(req.params.id, req.body, req.usuario);
       res.json({ ok: true, mensaje: 'Evaluación actualizada.' });
     } catch (error) {
       next(error);
@@ -40,7 +40,7 @@ class EvaluacionController {
 
   async deleteEvaluacion(req, res, next) {
     try {
-      await evaluacionService.deleteEvaluacion(parseInt(req.params.id, 10), req.usuario);
+      await evaluacionService.deleteEvaluacion(req.params.id, req.usuario);
       res.json({ ok: true, mensaje: 'Evaluación eliminada.' });
     } catch (error) {
       next(error);

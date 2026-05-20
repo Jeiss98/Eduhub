@@ -1,144 +1,194 @@
 // repositories/proyectoRepository.js
-const { pool } = require('../config/mysql');
+const mongoose = require('mongoose'); // ← agregado
+const Proyecto = require('../models/mongo/proyecto.model');
+const Tarea = require('../models/mongo/tarea.model');
+const Evaluacion = require('../models/mongo/evaluacion.model');
+const { Usuario } = require('../models/mongo/usuario.model');
+
+async function calcularAvance(proyectoId) {
+  const [total, completadas] = await Promise.all([
+    Tarea.countDocuments({ id_proyecto: proyectoId }),
+    Tarea.countDocuments({ id_proyecto: proyectoId, completada: true }),
+  ]);
+  if (total === 0) return 0;
+  return Math.round((completadas / total) * 100);
+}
 
 class ProyectoRepository {
+  async _enrich(docs) {
+    return Promise.all(
+      docs.map(async (p) => {
+        const avance_pct = await calcularAvance(p._id);
+        return {
+          id: p._id,
+          titulo: p.titulo,
+          descripcion: p.descripcion,
+          fecha_inicio: p.fecha_inicio,
+          fecha_limite: p.fecha_limite,
+          estado: p.estado,
+          docente: p.id_docente?.nombre || null,
+          lider_nombre: p.id_docente
+            ? `${p.id_docente.nombre} ${p.id_docente.apellido || ''}`.trim()
+            : null,
+          email_docente: p.id_docente?.email || null,
+          id_docente: p.id_docente?._id || null,
+          total_estudiantes: p.estudiantes?.length ?? 0,
+          avance_pct,
+        };
+      })
+    );
+  }
+
   async findAllByStudent(estudianteId) {
-    const [rows] = await pool.query(`
-        SELECT p.id_proyecto AS id, p.titulo, p.descripcion,
-               p.fecha_inicio, p.fecha_limite, p.estado,
-               u.nombre AS docente, CONCAT(u.nombre, ' ', COALESCE(u.apellido, '')) AS lider_nombre,
-               fn_avance_proyecto(p.id_proyecto) AS avance_pct
-        FROM proyectos p
-        INNER JOIN usuarios u ON u.id_usuario = p.id_docente
-        INNER JOIN proyecto_estudiantes pe ON pe.id_proyecto = p.id_proyecto
-        WHERE pe.id_estudiante = ?
-        ORDER BY p.fecha_limite ASC`, [estudianteId]);
-    return rows;
+    const docs = await Proyecto.find({ estudiantes: estudianteId })
+      .populate('id_docente', 'nombre apellido email')
+      .sort({ fecha_limite: 1 })
+      .lean();
+    return this._enrich(docs);
   }
 
   async findAllByDocente(docenteId) {
-    const [rows] = await pool.query(`
-        SELECT p.id_proyecto AS id, p.titulo, p.descripcion,
-               p.fecha_inicio, p.fecha_limite, p.estado,
-               u.nombre AS docente, CONCAT(u.nombre, ' ', COALESCE(u.apellido, '')) AS lider_nombre,
-               COUNT(DISTINCT pe.id_estudiante) AS total_estudiantes,
-               fn_avance_proyecto(p.id_proyecto) AS avance_pct
-        FROM proyectos p
-        INNER JOIN usuarios u ON u.id_usuario = p.id_docente
-        LEFT JOIN proyecto_estudiantes pe ON pe.id_proyecto = p.id_proyecto
-        WHERE p.id_docente = ?
-        GROUP BY p.id_proyecto
-        ORDER BY p.fecha_limite ASC`, [docenteId]);
-    return rows;
+    const docs = await Proyecto.find({ id_docente: docenteId })
+      .populate('id_docente', 'nombre apellido email')
+      .sort({ fecha_limite: 1 })
+      .lean();
+    return this._enrich(docs);
   }
 
   async findAll() {
-    const [rows] = await pool.query(`
-        SELECT p.id_proyecto AS id, p.titulo, p.descripcion,
-               p.fecha_inicio, p.fecha_limite, p.estado,
-               u.nombre AS docente, CONCAT(u.nombre, ' ', COALESCE(u.apellido, '')) AS lider_nombre,
-               COUNT(DISTINCT pe.id_estudiante) AS total_estudiantes,
-               fn_avance_proyecto(p.id_proyecto) AS avance_pct
-        FROM proyectos p
-        INNER JOIN usuarios u ON u.id_usuario = p.id_docente
-        LEFT JOIN proyecto_estudiantes pe ON pe.id_proyecto = p.id_proyecto
-        GROUP BY p.id_proyecto
-        ORDER BY p.fecha_limite ASC`);
-    return rows;
+    const docs = await Proyecto.find()
+      .populate('id_docente', 'nombre apellido email')
+      .sort({ fecha_limite: 1 })
+      .lean();
+    return this._enrich(docs);
   }
 
   async findById(id) {
-    const [[proyecto]] = await pool.query(`
-      SELECT p.id_proyecto AS id, p.titulo, p.descripcion,
-             p.fecha_inicio, p.fecha_limite, p.estado, p.created_at, p.id_docente,
-             u.nombre AS docente, CONCAT(u.nombre, ' ', COALESCE(u.apellido, '')) AS lider_nombre, u.email AS email_docente,
-             fn_avance_proyecto(p.id_proyecto) AS avance_pct
-      FROM proyectos p
-      INNER JOIN usuarios u ON u.id_usuario = p.id_docente
-      WHERE p.id_proyecto = ?`, [id]);
-    return proyecto || null;
+    const p = await Proyecto.findById(id)
+      .populate('id_docente', 'nombre apellido email')
+      .lean();
+    if (!p) return null;
+    const [enriched] = await this._enrich([p]);
+    return enriched;
   }
 
   async getProyectoTareas(id) {
-    const [rows] = await pool.query(`
-      SELECT t.id_tarea AS id, t.titulo, t.descripcion, t.prioridad,
-             t.completada, t.fecha_limite, t.created_at,
-             u.nombre AS asignado_a, u.id_usuario AS id_estudiante,
-             fn_estado_tarea(t.id_tarea) AS estado
-      FROM tareas t
-      INNER JOIN usuarios u ON u.id_usuario = t.id_estudiante
-      WHERE t.id_proyecto = ?
-      ORDER BY t.completada ASC, t.prioridad DESC`, [id]);
-    return rows;
+    const tareas = await Tarea.find({ id_proyecto: id })
+      .populate('id_estudiante', 'nombre apellido')
+      .sort({ completada: 1, fecha_limite: 1 })
+      .lean();
+
+    return tareas.map((t) => ({
+      id: t._id,
+      titulo: t.titulo,
+      descripcion: t.descripcion,
+      prioridad: t.prioridad,
+      completada: t.completada,
+      fecha_limite: t.fecha_limite,
+      created_at: t.createdAt,
+      asignado_a: t.id_estudiante?.nombre || null,
+      id_estudiante: t.id_estudiante?._id || null,
+      estado: t.completada
+        ? 'completada'
+        : (t.fecha_limite && new Date(t.fecha_limite) < new Date() ? 'vencida' : 'pendiente'),
+    }));
   }
 
   async getProyectoEstudiantes(id) {
-    const [rows] = await pool.query(`
-      SELECT u.id_usuario AS id, u.nombre, u.apellido, u.email, pe.fecha_ingreso
-      FROM proyecto_estudiantes pe
-      INNER JOIN usuarios u ON u.id_usuario = pe.id_estudiante
-      WHERE pe.id_proyecto = ?
-      ORDER BY u.nombre`, [id]);
-    return rows;
+    const p = await Proyecto.findById(id)
+      .populate('estudiantes', 'nombre apellido email')
+      .lean();
+    if (!p) return [];
+    return (p.estudiantes || []).map((u) => ({
+      id: u._id,
+      nombre: u.nombre,
+      apellido: u.apellido,
+      email: u.email,
+    }));
   }
 
   async getProyectoEvaluaciones(id) {
-    const [rows] = await pool.query(`
-      SELECT e.id_evaluacion AS id, e.tipo, e.titulo, e.calificacion,
-             e.comentarios, e.fecha,
-             est.nombre AS estudiante,
-             doc.nombre AS docente
-      FROM evaluaciones e
-      INNER JOIN usuarios est ON est.id_usuario = e.id_estudiante
-      INNER JOIN usuarios doc ON doc.id_usuario = e.id_docente
-      WHERE e.id_proyecto = ?
-      ORDER BY e.fecha DESC`, [id]);
-    return rows;
+    const evals = await Evaluacion.find({ id_proyecto: id })
+      .populate('id_estudiante', 'nombre')
+      .populate('id_docente', 'nombre')
+      .sort({ fecha: -1 })
+      .lean();
+
+    return evals.map((e) => ({
+      id: e._id,
+      tipo: e.tipo,
+      titulo: e.titulo,
+      calificacion: e.calificacion,
+      comentarios: e.comentarios,
+      fecha: e.fecha,
+      estudiante: e.id_estudiante?.nombre || null,
+      docente: e.id_docente?.nombre || null,
+    }));
   }
 
   async create(docenteId, data) {
     const { titulo, descripcion, fecha_inicio, fecha_limite, estado } = data;
-    const [result] = await pool.query(
-      `INSERT INTO proyectos (id_docente, titulo, descripcion, fecha_inicio, fecha_limite, estado)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [docenteId, titulo.trim(), descripcion || null, fecha_inicio, fecha_limite, estado || 'activo']
-    );
-    return result.insertId;
+    const proyecto = new Proyecto({
+      titulo: titulo.trim(),
+      descripcion: descripcion || null,
+      fecha_inicio: fecha_inicio || null,
+      fecha_limite,
+      estado: estado || 'activo',
+      id_docente: new mongoose.Types.ObjectId(docenteId.toString()), // ← fix
+      estudiantes: [],
+    });
+    const saved = await proyecto.save();
+    return saved._id;
   }
 
   async update(id, data) {
     const { titulo, descripcion, fecha_inicio, fecha_limite, estado, id_docente } = data;
-    const [result] = await pool.query(
-      `UPDATE proyectos SET
-         titulo       = COALESCE(?, titulo),
-         descripcion  = COALESCE(?, descripcion),
-         fecha_inicio = COALESCE(?, fecha_inicio),
-         fecha_limite = COALESCE(?, fecha_limite),
-         estado       = COALESCE(?, estado),
-         id_docente   = COALESCE(?, id_docente)
-       WHERE id_proyecto = ?`,
-      [titulo, descripcion, fecha_inicio, fecha_limite, estado, id_docente, id]
-    );
-    return result.affectedRows;
+    const updateFields = {};
+    if (titulo !== undefined) updateFields.titulo = titulo;
+    if (descripcion !== undefined) updateFields.descripcion = descripcion;
+    if (fecha_inicio !== undefined) updateFields.fecha_inicio = fecha_inicio;
+    if (fecha_limite !== undefined) updateFields.fecha_limite = fecha_limite;
+    if (estado !== undefined) updateFields.estado = estado;
+    if (id_docente !== undefined) updateFields.id_docente = new mongoose.Types.ObjectId(id_docente.toString()); // ← fix consistente
+
+    const result = await Proyecto.findByIdAndUpdate(id, updateFields, { new: true });
+    return result ? 1 : 0;
   }
 
   async delete(id) {
-    const [result] = await pool.query('DELETE FROM proyectos WHERE id_proyecto = ?', [id]);
-    return result.affectedRows;
+    const result = await Proyecto.findByIdAndDelete(id);
+    return result ? 1 : 0;
   }
 
   async assignStudent(proyectoId, estudianteId) {
-    const [result] = await pool.query('CALL sp_asignar_estudiante(?, ?, @resultado)', [proyectoId, estudianteId]);
-    const [[row]] = await pool.query('SELECT @resultado AS resultado');
-    return row.resultado;
+    const proyecto = await Proyecto.findById(proyectoId);
+    if (!proyecto) return 'ERROR: Proyecto no encontrado';
+
+    const yaAsignado = proyecto.estudiantes.some(
+      (e) => e.toString() === estudianteId.toString()
+    );
+    if (yaAsignado) return 'ERROR: El estudiante ya está asignado al proyecto';
+
+    proyecto.estudiantes.push(estudianteId);
+    await proyecto.save();
+    return 'OK: Estudiante asignado correctamente';
   }
 
   async removeStudent(proyectoId, estudianteId) {
-    const [result] = await pool.query(
-      'DELETE FROM proyecto_estudiantes WHERE id_proyecto = ? AND id_estudiante = ?',
-      [proyectoId, estudianteId]
+    const result = await Proyecto.findByIdAndUpdate(
+      proyectoId,
+      { $pull: { estudiantes: estudianteId } },
+      { new: true }
     );
-    return result.affectedRows;
+    return result ? 1 : 0;
+  }
+
+  async checkStudentInProject(proyectoId, estudianteId) {
+    const p = await Proyecto.findOne({
+      _id: proyectoId,
+      estudiantes: estudianteId,
+    }).lean();
+    return !!p;
   }
 }
 

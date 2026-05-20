@@ -1,4 +1,4 @@
-// services/usuarioService.js
+// services/usuarioService.js — IDs como string (MongoDB ObjectId)
 const usuarioRepository = require('../repositories/usuarioRepository');
 
 class UsuarioService {
@@ -13,7 +13,7 @@ class UsuarioService {
   }
 
   async getUsuarioById(id, reqUsuario) {
-    const esPropio = id === reqUsuario.id;
+    const esPropio = String(id) === String(reqUsuario.id);
     const puedeVer = esPropio || reqUsuario.rol === 'admin' || reqUsuario.rol === 'docente';
 
     if (!puedeVer) {
@@ -28,20 +28,20 @@ class UsuarioService {
   }
 
   async updateUsuario(id, updateData, reqUsuario) {
-    const esPropio = id === reqUsuario.id;
+    const esPropio = String(id) === String(reqUsuario.id);
     if (!esPropio && reqUsuario.rol !== 'admin') {
       throw { status: 403, message: 'Solo puedes editar tu propio perfil.' };
     }
 
     const cleanData = {};
-    if (updateData.nombre) cleanData.nombre = updateData.nombre.trim();
-    if (updateData.apellido !== undefined) cleanData.apellido = updateData.apellido.trim();
-    if (updateData.email) cleanData.email = updateData.email.trim().toLowerCase();
+    if (updateData.nombre)    cleanData.nombre    = updateData.nombre.trim();
+    if (updateData.apellido  !== undefined) cleanData.apellido  = updateData.apellido.trim();
+    if (updateData.email)     cleanData.email     = updateData.email.trim().toLowerCase();
     if (updateData.documento) cleanData.documento = updateData.documento.trim();
-    
+
     if (reqUsuario.rol === 'admin') {
-      if (updateData.rol) cleanData.rol = updateData.rol;
-      if (updateData.activo !== undefined) cleanData.activo = updateData.activo ? 1 : 0;
+      if (updateData.rol    !== undefined) cleanData.rol    = updateData.rol;
+      if (updateData.activo !== undefined) cleanData.activo = !!updateData.activo;
     }
 
     if (Object.keys(cleanData).length === 0) {
@@ -54,7 +54,7 @@ class UsuarioService {
         throw { status: 404, message: 'Usuario no encontrado.' };
       }
     } catch (err) {
-      if (err.code === 'ER_DUP_ENTRY') {
+      if (err.code === 11000) {
         throw { status: 409, message: 'El email ya está en uso.' };
       }
       throw err;
@@ -62,7 +62,7 @@ class UsuarioService {
   }
 
   async deleteUsuario(id, reqUsuario) {
-    if (id === reqUsuario.id) {
+    if (String(id) === String(reqUsuario.id)) {
       throw { status: 400, message: 'No puedes desactivar tu propia cuenta.' };
     }
     const affectedRows = await usuarioRepository.updateActivo(id, false);

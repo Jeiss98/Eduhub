@@ -11,7 +11,8 @@ const logSchema = new mongoose.Schema(
       index: true,
     },
     usuario_id: {
-      type: Number, // FK lógica al id_usuario de MySQL
+      type: mongoose.Schema.Types.ObjectId, // ref al _id del Usuario en MongoDB
+      ref: 'Usuario',
       default: null,
       index: true,
     },
